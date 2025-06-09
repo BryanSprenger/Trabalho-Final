@@ -5,20 +5,11 @@ from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely.geometry import Polygon
 
-# Simula dados de dois lotes
-data = {
-    "inscricao_fiscal": ["123456", "789012"],
-    "taxa_ocupacao": [0.6, 0.5],
-    "coeficiente_aproveitamento": [2.0, 1.5],
-    "uso_permitido": ["Residencial", "Comercial"],
-    "geometry": [
-        Polygon([(-49.27, -25.44), (-49.27, -25.4395), (-49.2695, -25.4395), (-49.2695, -25.44)]),
-        Polygon([(-49.269, -25.44), (-49.269, -25.4395), (-49.2685, -25.4395), (-49.2685, -25.44)])
-    ]
-}
+# Caminho local no ambiente do Streamlit (caso o zip esteja na pasta do projeto)
+shapefile_path = "lotes_curitiba.zip"
 
-# Cria o GeoDataFrame
-gdf = gpd.GeoDataFrame(data, crs="EPSG:4326")
+# Carrega o GeoDataFrame a partir do zip
+gdf = gpd.read_file(f"zip://{os.path.abspath(shapefile_path)}")
 
 # Interface do Streamlit
 st.set_page_config(layout="wide")
