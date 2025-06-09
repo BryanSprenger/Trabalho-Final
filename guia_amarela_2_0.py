@@ -7,7 +7,12 @@ Original file is located at
     https://colab.research.google.com/drive/1_AcpjvwHN5xdETWvG64dq9n8c6hExRqr
 """
 
-pip install streamlit folium geopandas streamlit-folium shapely
+pip install 
+pip install streamlit 
+pip install folium 
+pip install geopandas 
+pip install streamlit-folium 
+pip install shapely
 
 import streamlit as st
 import folium
