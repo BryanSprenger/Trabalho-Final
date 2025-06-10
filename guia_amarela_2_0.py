@@ -9,26 +9,26 @@ import zipfile
 import io
 
 # URL para o ZIP direto no GitHub
-url = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.zip"
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.zip"
 
 # Faz o download do arquivo zip
 response = requests.get(url)
 with zipfile.ZipFile(io.BytesIO(response.content)) as z:
     z.extractall("temp_shp")  # extrai os arquivos numa pasta temporária
 
-# Agora carregamos o shapefile da pasta extraída
-gdf = gpd.read_file("temp_shp")  # o geopandas identifica automaticamente o .shp
+polygons = gpd.read_file(url_lotes)
 
-# Interface do Streamlit
-st.set_page_config(layout="wide")
-st.title("📍 Guia Amarela Interativa")
+gdf = load_gdf_from_zip(url)
+
+
+# Configuração da página
+PAGE_CONFIG = {"page_title":"" Guia Amarela Interativa"", "page_icon":":scroll:", "layout":"centered"}
+st.set_page_config(**PAGE_CONFIG)
 
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
 # Mapa base
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
-
-
 
 # Exibe o mapa
 st_data = st_folium(m, width=1000, height=500)
