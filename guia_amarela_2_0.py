@@ -4,17 +4,10 @@ import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely.geometry import Polygon
-import requests
-import zipfile
-import io
+
 
 # URL para o ZIP direto no GitHub
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.zip"
-
-# Faz o download do arquivo zip
-response = requests.get(url)
-with zipfile.ZipFile(io.BytesIO(response.content)) as z:
-    z.extractall("temp_shp")  # extrai os arquivos numa pasta temporária
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
 
 polygons = gpd.read_file(url_lotes)
 
