@@ -9,7 +9,7 @@ from shapely.geometry import Polygon
 shapefile_path = "lotes_curitiba.zip"
 
 # Carrega o GeoDataFrame a partir do zip
-gdf = gpd.read_file(f"zip://{os.path.abspath(shapefile_path)}")
+gdf = gpd.read_file(f"zip://{os.path.abspath(Trabalho-Final/lotes.zip)}")
 
 # Interface do Streamlit
 st.set_page_config(layout="wide")
