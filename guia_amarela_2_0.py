@@ -5,11 +5,16 @@ from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely.geometry import Polygon
 
-# Caminho local no ambiente do Streamlit (caso o zip esteja na pasta do projeto)
-shapefile_path = "lotes_curitiba.zip"
+# URL para o ZIP direto no GitHub
+url = "https://raw.githubusercontent.com/seu-usuario/Trabalho-Final/main/lotes.zip"
 
-# Carrega o GeoDataFrame a partir do zip
-gdf = gpd.read_file(f"zip://{os.path.abspath(lotes.zip)}")
+# Faz o download do arquivo zip
+response = requests.get(url)
+with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+    z.extractall("temp_shp")  # extrai os arquivos numa pasta temporária
+
+# Agora carregamos o shapefile da pasta extraída
+gdf = gpd.read_file("temp_shp")  # o geopandas identifica automaticamente o .shp
 
 # Interface do Streamlit
 st.set_page_config(layout="wide")
