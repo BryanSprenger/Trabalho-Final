@@ -11,9 +11,6 @@ url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main
 
 polygons = gpd.read_file(url_lotes)
 
-gdf = load_gdf_from_zip(url)
-
-
 # Configuração da página
 PAGE_CONFIG = {"page_title":" Guia Amarela Interativa", "page_icon":":scroll:", "layout":"centered"}
 st.set_page_config(**PAGE_CONFIG)
