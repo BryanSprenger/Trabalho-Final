@@ -22,7 +22,7 @@ gdf = load_gdf_from_zip(url)
 
 
 # Configuração da página
-PAGE_CONFIG = {"page_title":"" Guia Amarela Interativa"", "page_icon":":scroll:", "layout":"centered"}
+PAGE_CONFIG = {"page_title":" Guia Amarela Interativa", "page_icon":":scroll:", "layout":"centered"}
 st.set_page_config(**PAGE_CONFIG)
 
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
