@@ -4,6 +4,9 @@ import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely.geometry import Polygon
+import requests
+import zipfile
+import io
 
 # URL para o ZIP direto no GitHub
 url = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.zip"
