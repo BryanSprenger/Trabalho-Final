@@ -6,7 +6,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 
 # URL para o ZIP direto no GitHub
-url = "https://raw.githubusercontent.com/seu-usuario/Trabalho-Final/main/lotes.zip"
+url = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.zip"
 
 # Faz o download do arquivo zip
 response = requests.get(url)
