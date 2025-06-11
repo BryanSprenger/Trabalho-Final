@@ -3,27 +3,31 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
-from shapely.geometry import Polygon
-from streamlit_folium import folium_static
-
-
-
-# URL para o diretorio no GitHub
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
-
-polygons = gpd.read_file(url_lotes)
+from folium import GeoJson
 
 # Configuração da página
-PAGE_CONFIG = {"page_title":" Guia Amarela Interativa", "page_icon":":scroll:", "layout":"centered"}
-st.set_page_config(**PAGE_CONFIG)
+st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
 
+st.title("Guia Amarela Interativa")
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
-# Mapa base
-m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+# URL do GeoJSON no GitHub
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
+
+# Carrega o GeoDataFrame
+gdf = gpd.read_file(url_lotes)
+
+# Cria o mapa base
+m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
+
+# Adiciona a camada GeoJSON ao mapa
+geojson_layer = folium.GeoJson(
+    gdf,
+    name="Lotes",
+    tooltip=folium.GeoJsonTooltip(fields=gdf.columns.tolist(), aliases=gdf.columns.tolist(), sticky=True)
+).add_to(m)
+
 folium.LayerControl().add_to(m)
 
-
-# Exibe o mapa
-st_data = st_folium(m, width=1000, height=500)
-
+# Exibe o mapa no Streamlit
+st_data = st_folium(m, width=1000, height=600)
