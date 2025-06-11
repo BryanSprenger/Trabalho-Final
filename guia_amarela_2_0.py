@@ -4,6 +4,7 @@ import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely.geometry import Polygon
+from streamlit_folium import folium_static
 
 
 # URL para o ZIP direto no GitHub
