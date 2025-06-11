@@ -12,7 +12,7 @@ st.title("Guia Amarela Interativa")
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
 # URL do GeoJSON no GitHub
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes3.geojson"
 
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
