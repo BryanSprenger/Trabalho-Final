@@ -19,7 +19,7 @@ st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para vi
 
 # Mapa base
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron',
-                geo_data=polygons.to_json(), data=polygons).add_to(m)
+                data=polygons).add_to(m)
     folium.LayerControl().add_to(m)
     folium_static(m)
 
