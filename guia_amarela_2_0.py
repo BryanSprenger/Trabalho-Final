@@ -7,7 +7,8 @@ from shapely.geometry import Polygon
 from streamlit_folium import folium_static
 
 
-# URL para o ZIP direto no GitHub
+
+# URL para o diretorio no GitHub
 url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
 
 polygons = gpd.read_file(url_lotes)
@@ -19,7 +20,7 @@ st.set_page_config(**PAGE_CONFIG)
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
 # Mapa base
-m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron', data=polygons)
+m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
 folium.LayerControl().add_to(m)
 
 
