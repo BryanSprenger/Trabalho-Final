@@ -17,6 +17,9 @@ url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
 
+# Mantém apenas colunas serializáveis (ex: str, int, float, bool)
+gdf = gdf[[col for col in gdf.columns if pd.api.types.is_scalar(gdf[col].iloc[0]) or pd.api.types.is_numeric_dtype(gdf[col])]]
+
 # Cria o mapa base
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
 
