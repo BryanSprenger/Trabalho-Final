@@ -22,12 +22,14 @@ st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para vi
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
 
 # Adiciona a camada GeoJSON
+campos_seguro = ['CDLOTE', 'INDFISCAL', 'CDVIA", 'NMVIA']  # substitua por campos que existam de verdade
+
 folium.GeoJson(
     gdf,
     name="Lotes",
     tooltip=folium.GeoJsonTooltip(
-        fields=gdf.columns.tolist(),
-        aliases=gdf.columns.tolist(),
+        fields=campos_seguro,
+        aliases=["Código da Via", "Indicação Fiscal", "Código da Via", "Nome da Via"],
         sticky=True
     )
 ).add_to(m)
