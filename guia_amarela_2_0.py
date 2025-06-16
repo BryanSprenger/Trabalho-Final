@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
 import folium
 import geopandas as gpd
 import pandas as pd
