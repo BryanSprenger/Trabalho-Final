@@ -10,12 +10,8 @@ st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", l
 st.title("Guia Amarela Interativa")
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
-# --- URL do GeoJSON ---
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes4.geojson"
-
 # --- Criação do Mapa Base Folium ---
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
-
 
 # --- Adição de Controle de Camadas ---
 folium.LayerControl().add_to(m)
