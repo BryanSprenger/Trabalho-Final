@@ -11,9 +11,6 @@ url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
 
-# Remove feições sem geometria
-gdf = gdf[~gdf.geometry.isnull()].copy()
-
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
 
