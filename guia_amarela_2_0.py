@@ -33,6 +33,5 @@ folium.GeoJson(
 
 folium.LayerControl().add_to(m)
 
-
 # --- Renderização do Mapa no Streamlit ---
-folium_static(m)
+st_data = st_folium(m, width=1000, height=600)
