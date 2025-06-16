@@ -11,6 +11,21 @@ url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
 
+# Converter colunas para string no GeoDataFrame apenas para o tooltip (sem afetar o original)
+gdf_tooltip = gdf.copy()
+for col in gdf_tooltip.columns:
+    gdf_tooltip[col] = gdf_tooltip[col].astype(str)
+
+folium.GeoJson(
+    gdf_tooltip,
+    name="Lotes",
+    tooltip=folium.GeoJsonTooltip(
+        fields=gdf_tooltip.columns.tolist(),
+        aliases=gdf_tooltip.columns.tolist(),
+        sticky=True
+    )
+).add_to(m)
+
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
 
