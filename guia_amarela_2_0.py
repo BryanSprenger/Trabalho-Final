@@ -6,10 +6,11 @@ import pandas as pd
 import plotly.express as px
 
 # Carregamento dos dados
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_1.geojson"
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_2.geojson"
 
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
+gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
