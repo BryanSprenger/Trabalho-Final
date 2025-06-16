@@ -29,5 +29,5 @@ geojson_layer = folium.GeoJson(
 
 folium.LayerControl().add_to(m)
 
-# Exibe o mapa no Streamlit
-st_data = st_folium(m, width=1000, height=600)
+if __name__ == '__main__':
+    main()
