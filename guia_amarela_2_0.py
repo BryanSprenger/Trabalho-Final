@@ -16,19 +16,19 @@ st.title("Guia Amarela Interativa")
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
 
 # --- Criação do Mapa Base Folium ---
-    m = folium.Map(location=[-25.5, -49.3], zoom_start=9)
-    folium.Choropleth(
-        geo_data=bairros_finais.to_json(),
-        name='estacionamentos por bairro',
-        data=bairros_finais,
-        columns=['OBJECTID', 'num_pto'],
-        key_on='feature.properties.OBJECTID',
-        fill_color='YlGn',
-        legend_name='Estacionamentos por bairro'
-    ).add_to(m)
-    folium.LayerControl().add_to(m)
-    folium_static(m)
-
+  def main():
+	st.title("Como adicionar mapas no StreamLit")
+	st.subheader("Baseado num caderno do Colab")
+	menu = ["Home","Mapa"]
+	choice = st.sidebar.selectbox('Menu',menu)
+	if choice == 'Home':
+		st.subheader("Página Inicial 1")
+	elif choice == 'Mapa':
+		st.subheader("Visualizar Mapa")
+		with st.echo():
+			m = folium.Map (location = [-25.5,-49.3], zoom_start =  9)
+			folium_static(m)
+	else: 
+		st.subheader("")
 if __name__ == '__main__':
-    main()
-
+	main()
