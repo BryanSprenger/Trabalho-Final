@@ -6,8 +6,10 @@ import pandas as pd
 import plotly.express as px
 
 # Carregamento dos dados
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
 
-
+# Carrega o GeoDataFrame
+gdf = gpd.read_file(url_lotes)
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
@@ -18,6 +20,21 @@ st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para vi
 # --- Criação do Mapa Base Folium ---
 m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
 
+# Adiciona a camada GeoJSON
+folium.GeoJson(
+    gdf,
+    name="Lotes",
+    tooltip=folium.GeoJsonTooltip(
+        fields=gdf.columns.tolist(),
+        aliases=gdf.columns.tolist(),
+        sticky=True
+    )
+).add_to(m)
+
+folium.LayerControl().add_to(m)
+
+# Exibe o mapa
+st_data = st_folium(m, width=1000, height=600)
 
 # --- Renderização do Mapa no Streamlit ---
 folium_static(m)
