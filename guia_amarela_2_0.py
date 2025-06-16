@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 
 # Carregamento dos dados
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes.geojson"
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/lotes4.geojson"
 
 # Carrega o GeoDataFrame
 gdf = gpd.read_file(url_lotes)
