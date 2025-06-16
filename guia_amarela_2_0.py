@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium
 import folium
 import geopandas as gpd
 import pandas as pd
@@ -34,4 +34,4 @@ folium.GeoJson(
 folium.LayerControl().add_to(m)
 
 # --- Renderização do Mapa no Streamlit ---
-folium_static(m, width=1000, height=600)
+st_data = st_folium(m)
