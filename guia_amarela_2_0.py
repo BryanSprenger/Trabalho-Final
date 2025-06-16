@@ -20,4 +20,4 @@ m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron
 
 
 # --- Renderização do Mapa no Streamlit ---
-m
+folium_static(m)
