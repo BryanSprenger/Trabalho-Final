@@ -13,7 +13,7 @@ gdf = gpd.read_file(url_lotes)
 gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
 
 # --- Configuração da Página Streamlit ---
-st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="centered")
+st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
 
 st.title("Guia Amarela Interativa")
 st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
@@ -37,4 +37,4 @@ folium.GeoJson(
 folium.LayerControl().add_to(m)
 
 # --- Renderização do Mapa no Streamlit ---
-st_data = st_folium(m)
+st_data = st_folium(m, width="100%", height=700)
