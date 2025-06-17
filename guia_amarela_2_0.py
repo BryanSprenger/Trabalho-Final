@@ -17,9 +17,6 @@ df_alvaras = pd.read_csv(url_relatório2025, encoding='utf-8', sep=';')
 #GeoDataFrame
 gdf = gpd.read_file(url_lotes)
 gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
-gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
-
-
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -269,6 +266,8 @@ elif pagina == "🗺️ Mapa Interativo":
 elif pagina == "Análise Estatística de Emissão de Alvarás":
     st.title("Análise Estatística de Emissão de Alvarás")
 
+    gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
+    
     # Caixa para selecionar o ano
     anos_disponiveis = ("2025", "2024", "2023", "2022")
     ano_selecionado = st.selectbox("Selecione o ano:", sorted(anos_disponiveis, reverse=True))
