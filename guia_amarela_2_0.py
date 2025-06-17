@@ -278,11 +278,11 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
 # Carregamento dos dados de alvarás
     try:
-    df_alvaras = pd.read_csv(urls_alvaras[ano], sep=';', encoding='utf-8')
-    st.success(f"Relatório de alvarás de {ano} carregado com sucesso.")
-except Exception as e:
-    st.error(f"Erro ao carregar dados de alvarás: {e}")
-    st.stop()
+        df_alvaras = pd.read_csv(urls_alvaras[ano], sep=';', encoding='utf-8')
+        st.success(f"Relatório de alvarás de {ano} carregado com sucesso.")
+    except Exception as e:
+        st.error(f"Erro ao carregar dados de alvarás: {e}")
+        st.stop()
 
 # Verificação das colunas mínimas necessárias
 colunas_necessarias = ['INDFISCAL', 'Uso(s) Alvará']
