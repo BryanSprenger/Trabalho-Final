@@ -104,6 +104,33 @@ elif pagina == "🏗️ Potencial Construtivo":
                 st.error("A geometria selecionada não é um polígono válido.")
     else:
         st.info("Insira a Indicação Fiscal para visualizar o lote.")
+
+
+# --------------------------------------------------------------------------------------- ÁREA DE OCUPAÇÃO -------------------------------------------------------------------
+
+elif pagina == "📐 Área de Ocupação":
+    st.title("Área de Ocupação do Lote")
+
+    st.markdown("Visualize o quanto do lote pode ou não ser ocupado, com base na taxa de ocupação e permeabilidade.")
+
+    area_lote = st.sidebar.number_input("Área do lote (m²):", min_value=50.0, value=360.0)
+    taxa_ocupacao = st.sidebar.slider("Taxa de Ocupação (%)", 10, 100, 60)
+
+    area_ocupada = (taxa_ocupacao / 100) * area_lote
+    area_livre = area_lote - area_ocupada
+
+    st.write(f"Área ocupada: {area_ocupada:.2f} m²")
+    st.write(f"Área livre: {area_livre:.2f} m²")
+
+    # Gráfico com Plotly
+    import plotly.express as px
+    df_ocupacao = px.data.tips()  # Substituído abaixo
+    df_ocupacao = {
+        "Tipo": ["Área Ocupada", "Área Livre"],
+        "Valor": [area_ocupada, area_livre]
+    }
+    fig = px.pie(df_ocupacao, values="Valor", names="Tipo", title="Distribuição do Lote")
+    st.plotly_chart(fig)
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
