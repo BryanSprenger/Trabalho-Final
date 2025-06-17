@@ -185,6 +185,7 @@ elif pagina == "📐 Área de Ocupação":
                     )
 
                     st.plotly_chart(fig2, use_container_width=True)
+                    
                     # Gráfico de pizza da ocupação
                     ocupacao_labels = ['Área Ocupada', 'Área Livre']
                     ocupacao_values = [area_ocupada, area_total - area_ocupada]
