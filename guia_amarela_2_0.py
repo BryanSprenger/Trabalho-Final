@@ -113,24 +113,84 @@ elif pagina == "📐 Área de Ocupação":
 
     st.markdown("Visualize o quanto do lote pode ou não ser ocupado, com base na taxa de ocupação e permeabilidade.")
 
-    area_lote = st.sidebar.number_input("Área do lote (m²):", min_value=50.0, value=360.0)
-    taxa_ocupacao = st.sidebar.slider("Taxa de Ocupação (%)", 10, 100, 60)
+    # Caixa para buscar o lote
+    ind_fiscal_2 = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para simular a ocupação:")
 
-    area_ocupada = (taxa_ocupacao / 100) * area_lote
-    area_livre = area_lote - area_ocupada
+     # Carrega o arquivo GeoJSON localmente
+    gdf = gpd.read_file(url_lotes)
+    
+    if ind_fiscal_2:
+        lote_2 = gdf[gdf["INDFISCAL"] == ind_fiscal_2]
 
-    st.write(f"Área ocupada: {area_ocupada:.2f} m²")
-    st.write(f"Área livre: {area_livre:.2f} m²")
+        if lote_2.empty:
+            st.warning("Lote não encontrado.")
+        else:
+            geom = lote_2.geometry.values[0]
 
-    # Gráfico com Plotly
-    import plotly.express as px
-    df_ocupacao = px.data.tips()  # Substituído abaixo
-    df_ocupacao = {
-        "Tipo": ["Área Ocupada", "Área Livre"],
-        "Valor": [area_ocupada, area_livre]
-    }
-    fig = px.pie(df_ocupacao, values="Valor", names="Tipo", title="Distribuição do Lote")
-    st.plotly_chart(fig)
+            if geom.is_empty:
+                st.error("Geometria do lote vazia.")
+            elif geom.geom_type == "MultiPolygon":
+                geom = max(geom.geoms, key=lambda a: a.area)
+
+            if geom.geom_type == "Polygon":
+                try:
+                    x, y = list(geom.exterior.coords.xy[0]), list(geom.exterior.coords.xy[1])
+                    area_total = geom.area
+
+                    st.markdown(f"**Área total do lote:** {area_total:.2f} m²")
+
+                    # Slider para simular taxa de ocupação
+                    ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, 100, 50, 5)
+                    area_ocupada = area_total * (ocupacao_pct / 100)
+
+                    # Suposição de altura mínima para ilustrar
+                    altura = 3
+
+                    # Escala proporcional da base do bloco
+                    escala = (area_ocupada / area_total) ** 0.5
+                    x_centro = sum(x) / len(x)
+                    y_centro = sum(y) / len(y)
+
+                    x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
+                    y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
+                    z_base = [0] * len(x)
+                    z_top = [altura] * len(x)
+
+                    fig2 = go.Figure()
+
+                    # Geometria original do lote (base)
+                    fig2.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
+                                                line=dict(color='lightgray', width=3),
+                                                name='Área Total'))
+
+                    # Geometria ocupada simulada
+                    fig2.add_trace(go.Scatter3d(x=x_scaled, y=y_scaled, z=z_top, mode='lines',
+                                                line=dict(color='green', width=4),
+                                                name=f'Ocupação ({ocupacao_pct}%)'))
+
+                    # Laterais da ocupação
+                    for i in range(len(x)):
+                        fig2.add_trace(go.Scatter3d(
+                            x=[x_scaled[i], x_scaled[i]], y=[y_scaled[i], y_scaled[i]], z=[0, altura],
+                            mode='lines', line=dict(color='green', width=2), showlegend=False
+                        ))
+
+                    fig2.update_layout(
+                        scene=dict(
+                            xaxis_title="X",
+                            yaxis_title="Y",
+                            zaxis_title="Altura (m)"
+                        ),
+                        margin=dict(l=0, r=0, b=0, t=30)
+                    )
+
+                    st.plotly_chart(fig2, use_container_width=True)
+                    st.markdown(f"**Área ocupada:** {area_ocupada:.2f} m²")
+
+                except Exception as e:
+                    st.error(f"Erro ao gerar visualização: {e}")
+            else:
+                st.error("Geometria não é um polígono.")
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
