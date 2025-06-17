@@ -12,7 +12,7 @@ url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-F
 
 
 # Dataframes
-df_alvaras = pd.read_csv(url_alvaras, encoding='utf-8', sep=';')
+df_alvaras = pd.read_csv(url_relatório2025, encoding='utf-8', sep=';')
 
 #GeoDataFrame
 gdf = gpd.read_file(url_lotes)
