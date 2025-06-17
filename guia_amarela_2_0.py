@@ -12,7 +12,15 @@ url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-F
 
 
 # Dataframes
-df_alvaras = pd.read_csv('url_relatório2025')
+df_alvaras = pd.read_csv(url_alvaras, encoding='utf-8', sep=';')
+
+#GeoDataFrame
+    # Carrega o GeoDataFrame
+    gdf = gpd.read_file(url_lotes)
+    gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
+    gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
+
+
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -236,11 +244,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
 elif pagina == "🗺️ Mapa Interativo":
     st.title("Mapa Interativo")
 
-        # Carrega o GeoDataFrame
-    gdf = gpd.read_file(url_lotes)
-    gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
-
-    # --- Criação do Mapa Base Folium ---
+        # --- Criação do Mapa Base Folium ---
     m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
 
     # Adiciona a camada GeoJSON
