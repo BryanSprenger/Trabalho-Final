@@ -273,7 +273,7 @@ elif pagina == "🗺️ Mapa Interativo":
 elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
-     # Seleção de ano
+# Seleção de ano
     ano = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
 
 # Carregamento dos dados de alvarás
