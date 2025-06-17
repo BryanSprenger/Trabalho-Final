@@ -6,7 +6,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-
+# Carregamento dos dados
+    url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_4.geojson"
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -40,55 +41,58 @@ elif pagina == "🏗️ Potencial Construtivo":
 
     st.markdown("Visualize aqui o volume máximo permitidos pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
-    # Slider lateral
-    ca = st.sidebar.slider("Coeficiente de Aproveitamento (CA)", 0.5, 6.0, 1.5, 0.1)
-    area_lote = st.sidebar.number_input("Área do Lote (m²)", min_value=50.0, value=360.0, step=10.0)
-    altura_max = st.sidebar.number_input("Altura Máxima (m)", min_value=3.0, value=12.0, step=1.0)
+    # Carrega o arquivo GeoJSON localmente
+    gdf = gpd.read_file(url_lotes)
 
-    area_construida_max = ca * area_lote
-    base_area = area_lote ** 0.5
-    altura_predio = min(altura_max, area_construida_max / base_area)
+    # Caixa de entrada para Indicação Fiscal
+    ind_fiscal = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
 
-    # Visualização 3D simplificada
-    fig = go.Figure(data=[
-        go.Mesh3d(
-            x=[0, base_area, base_area, 0, 0, base_area, base_area, 0],
-            y=[0, 0, base_area, base_area, 0, 0, base_area, base_area],
-            z=[0, 0, 0, 0, altura_predio, altura_predio, altura_predio, altura_predio],
-            color='lightblue', opacity=0.6
-        )
-    ])
-    fig.update_layout(
-        title="Volume Máximo Simulado",
-        scene=dict(xaxis_title='X (m)', yaxis_title='Y (m)', zaxis_title='Altura (m)'),
-        margin=dict(l=0, r=0, b=0, t=30)
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    # Verifica se foi digitado algo
+    if ind_fiscal:
+        # Filtra o lote correspondente
+        lote_filtrado = gdf[gdf["INDFISCAL"] == ind_fiscal]
 
-# --- ÁREA DE OCUPAÇÃO ---
-elif pagina == "📐 Área de Ocupação":
-    st.title("Área de Ocupação do Lote")
+        if lote_filtrado.empty:
+            st.warning("Nenhum lote encontrado com essa indicação fiscal.")
+        else:
+            lote = lote_filtrado.geometry.values[0]
 
-    st.markdown("Visualize o quanto do lote pode ou não ser ocupado, com base na taxa de ocupação e permeabilidade.")
+            # Se for multipolígono, pega o primeiro
+            if lote.geom_type == "MultiPolygon":
+                lote = list(lote.geoms)[0]
 
-    area_lote = st.sidebar.number_input("Área do lote (m²):", min_value=50.0, value=360.0)
-    taxa_ocupacao = st.sidebar.slider("Taxa de Ocupação (%)", 10, 100, 60)
+            x, y = lote.exterior.coords.xy
+            z_base = [0] * len(x)
+            area = lote.area
 
-    area_ocupada = (taxa_ocupacao / 100) * area_lote
-    area_livre = area_lote - area_ocupada
+            ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
+            altura = (ca * area) / (area ** 0.5)
+            z_top = [altura] * len(x)
 
-    st.write(f"Área ocupada: {area_ocupada:.2f} m²")
-    st.write(f"Área livre: {area_livre:.2f} m²")
+            fig = go.Figure()
 
-    # Gráfico com Plotly
-    import plotly.express as px
-    df_ocupacao = px.data.tips()  # Substituído abaixo
-    df_ocupacao = {
-        "Tipo": ["Área Ocupada", "Área Livre"],
-        "Valor": [area_ocupada, area_livre]
-    }
-    fig = px.pie(df_ocupacao, values="Valor", names="Tipo", title="Distribuição do Lote")
-    st.plotly_chart(fig)
+            # base
+            fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
+                                       line=dict(color='blue', width=4), name='Base'))
+
+            # topo
+            fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
+                                       line=dict(color='lightblue', width=4), name='Topo'))
+
+            for i in range(len(x)):
+                fig.add_trace(go.Scatter3d(
+                    x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
+                    mode='lines', line=dict(color='lightblue', width=2), showlegend=False
+                ))
+
+            fig.update_layout(
+                scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
+                margin=dict(l=0, r=0, b=0, t=30)
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Insira a Indicação Fiscal para visualizar o lote.")
 
 # --- INDICADORES ---
 elif pagina == "📊 Indicadores Urbanísticos":
@@ -109,10 +113,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
 elif pagina == "🗺️ Mapa Interativo":
     st.title("Mapa Interativo")
 
-    # Carregamento dos dados
-    url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_4.geojson"
-
-    # Carrega o GeoDataFrame
+        # Carrega o GeoDataFrame
     gdf = gpd.read_file(url_lotes)
     gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
 
