@@ -286,9 +286,9 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
 # Verificação das colunas mínimas necessárias
 colunas_necessarias = ['INDFISCAL', 'Uso(s) Alvará']
-        if not all(col in df_alvaras.columns for col in colunas_necessarias):
-            st.error("O relatório selecionado não contém as colunas esperadas.")
-            st.stop()
+    if not all(col in df_alvaras.columns for col in colunas_necessarias):
+        st.error("O relatório selecionado não contém as colunas esperadas.")
+        st.stop()
 
 # Cruzamento entre lote e alvará por INDFISCAL
     df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
