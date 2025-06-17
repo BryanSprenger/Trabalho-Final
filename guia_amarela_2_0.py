@@ -266,7 +266,7 @@ elif pagina == "🗺️ Mapa Interativo":
 
 #---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
 
-elif aba == "Análise Estatística de Emissão de Alvarás":
+elif pagina == "Análise Estatística de Emissão de Alvarás":
     st.title("Análise Estatística de Emissão de Alvarás")
 
     # Caixa para selecionar o ano
