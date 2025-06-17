@@ -6,10 +6,17 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Carregamento dos dados
+# Carregamento dos dados dos Lotes
 url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_4.geojson"
-url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIO2025.csv"
 
+#Carregando os relatórios de Alvará
+# Mapeamento de anos para URLs dos arquivos CSV
+urls_alvaras = {
+    "2022": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2022.csv",
+    "2023": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2023.csv",
+    "2024": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2024.csv",
+    "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2025.csv"
+}
 
 # Dataframes
 df_alvaras = pd.read_csv(url_relatório2025, encoding='utf-8', sep=';')
@@ -266,41 +273,64 @@ elif pagina == "🗺️ Mapa Interativo":
 elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
-    gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
-    
-    # Caixa para selecionar o ano
-    anos_disponiveis = ("2025", "2024", "2023", "2022")
-    ano_selecionado = st.selectbox("Selecione o ano:", sorted(anos_disponiveis, reverse=True))
+     # Seleção de ano
+    ano = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
 
-    # Filtra os dados
-    gdf_filtrado = gdf[gdf['ANO_EMISSAO'] == ano_selecionado].copy()
+# Carregamento dos dados de alvarás
+    try:
+    df_alvaras = pd.read_csv(urls_alvaras[ano], sep=';', encoding='utf-8')
+    st.success(f"Relatório de alvarás de {ano} carregado com sucesso.")
+except Exception as e:
+    st.error(f"Erro ao carregar dados de alvarás: {e}")
+    st.stop()
 
-    # Se não houver nenhum alvará emitido no ano
-    if gdf_filtrado.empty:
-        st.warning("Nenhum alvará encontrado para o ano selecionado.")
-    else:
-        # Mapa com os lotes destacados por tipologia
-        mapa = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+# Verificação das colunas mínimas necessárias
+colunas_necessarias = ['INDFISCAL', 'Uso(s) Alvará']
+    if not all(col in df_alvaras.columns for col in colunas_necessarias):
+        st.error("O relatório selecionado não contém as colunas esperadas.")
+        st.stop()
 
-        # Escolhe cores para cada tipologia
-        tipologias = gdf_filtrado['TIPOLOGIA'].unique()
-        cores = {
-            tipo: color for tipo, color in zip(
-                tipologias,
-                ['red', 'blue', 'green', 'orange', 'purple', 'gray', 'brown', 'pink']
-            )
-        }
+# Cruzamento entre lote e alvará por INDFISCAL
+    df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-        for _, row in gdf_filtrado.iterrows():
-            folium.GeoJson(
-                row['geometry'],
-                style_function=lambda feat, tipo=row['TIPOLOGIA']: {
-                    'fillColor': cores.get(tipo, 'gray'),
-                    'color': 'black',
-                    'weight': 1,
-                    'fillOpacity': 0.6
-                },
-                tooltip=folium.Tooltip(f"Ind. Fiscal: {row['INDFISCAL']}<br>Tipologia: {row['TIPOLOGIA']}")
-            ).add_to(mapa)
+    gdf_alvaras = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
-        st_data = st_folium(mapa, width=1000, height=600)
+# Mapa com tipologias por cor
+    st.subheader("Mapa de alvarás emitidos por tipologia")
+
+    m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
+
+# Paleta de cores básica
+    tipologias = gdf_alvaras["Uso(s) Alvará"].unique()
+    cores = px.colors.qualitative.Safe  # até 10 cores distintas
+    cores_dict = {tip: cores[i % len(cores)] for i, tip in enumerate(tipologias)}
+
+    for _, row in gdf_alvaras.iterrows():
+        cor = cores_dict.get(row['TIPOLOGIA'], 'gray')
+        folium.GeoJson(
+            row.geometry,
+            tooltip=f"INDFISCAL: {row['INDFISCAL']}<br>TIPOLOGIA: {row['Uso(s) Alvará']}",
+            style_function=lambda feature, color=cor: {
+                'fillColor': color,
+                'color': 'black',
+                'weight': 1,
+                'fillOpacity': 0.6,
+            }
+        ).add_to(m)
+
+    st_folium(m, width=1000, height=500)
+
+# Gráfico de barras das tipologias
+    st.subheader("Distribuição de alvarás por tipologia")
+
+    tipologia_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
+    tipologia_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
+
+    fig = px.bar(tipologia_counts, x='TIPOLOGIA', y='QUANTIDADE',
+                 title=f'Alvarás emitidos por tipologia - {ano}',
+                 labels={'TIPOLOGIA': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
+                 color='TIPOLOGIA',
+                 color_discrete_map=cores_dict)
+
+    st.plotly_chart(fig, use_container_width=True)
