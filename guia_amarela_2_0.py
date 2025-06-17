@@ -8,6 +8,11 @@ import plotly.graph_objects as go
 
 # Carregamento dos dados
 url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_4.geojson"
+url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIO2025.csv"
+
+
+# Dataframes
+df_alvaras = pd.read_csv('alvaras_2025.csv')
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -19,7 +24,7 @@ st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para vi
 st.sidebar.title("Navegação")
 pagina = st.sidebar.radio(
     "Selecione uma seção:",
-    ("🏠 Home", "🏗️ Potencial Construtivo", "📐 Área de Ocupação", "📊 Indicadores Urbanísticos", "🗺️ Mapa Interativo")
+    ("🏠 Home", "🏗️ Potencial Construtivo", "📐 Área de Ocupação", "📊 Indicadores Urbanísticos", "🗺️ Mapa Interativo", "🏘️ Análise Estatística de Emissão de Alvarás")
 )
 
 # ------------------------------------------------------------------------------ HOME -----------------------------------------------------------------------------------------------
@@ -116,9 +121,7 @@ elif pagina == "📐 Área de Ocupação":
     # Caixa para buscar o lote
     ind_fiscal_2 = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para simular a ocupação:")
 
-     # Carrega o arquivo GeoJSON localmente
-    gdf = gpd.read_file(url_lotes)
-    
+   
     if ind_fiscal_2:
         lote_2 = gdf[gdf["INDFISCAL"] == ind_fiscal_2]
 
@@ -257,3 +260,45 @@ elif pagina == "🗺️ Mapa Interativo":
 
     # --- Renderização do Mapa no Streamlit ---
     st_data = st_folium(m, width="100%", height=700)
+
+#---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
+
+elif aba == "Análise Estatística de Emissão de Alvarás":
+    st.title("Análise Estatística de Emissão de Alvarás")
+
+    # Caixa para selecionar o ano
+    anos_disponiveis = ("20225", "2024", "2023", "2022")
+    ano_selecionado = st.selectbox("Selecione o ano:", sorted(anos_disponiveis, reverse=True))
+
+    # Filtra os dados
+    gdf_filtrado = gdf[gdf['ANO_EMISSAO'] == ano_selecionado].copy()
+
+    # Se não houver nenhum alvará emitido no ano
+    if gdf_filtrado.empty:
+        st.warning("Nenhum alvará encontrado para o ano selecionado.")
+    else:
+        # Mapa com os lotes destacados por tipologia
+        mapa = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+
+        # Escolhe cores para cada tipologia
+        tipologias = gdf_filtrado['TIPOLOGIA'].unique()
+        cores = {
+            tipo: color for tipo, color in zip(
+                tipologias,
+                ['red', 'blue', 'green', 'orange', 'purple', 'gray', 'brown', 'pink']
+            )
+        }
+
+        for _, row in gdf_filtrado.iterrows():
+            folium.GeoJson(
+                row['geometry'],
+                style_function=lambda feat, tipo=row['TIPOLOGIA']: {
+                    'fillColor': cores.get(tipo, 'gray'),
+                    'color': 'black',
+                    'weight': 1,
+                    'fillOpacity': 0.6
+                },
+                tooltip=folium.Tooltip(f"Ind. Fiscal: {row['INDFISCAL']}<br>Tipologia: {row['TIPOLOGIA']}")
+            ).add_to(mapa)
+
+        st_data = st_folium(mapa, width=1000, height=600)
