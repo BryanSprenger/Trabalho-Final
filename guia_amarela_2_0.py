@@ -67,7 +67,7 @@ elif pagina == "🏗️ Potencial Construtivo":
 
             if lote_geom.geom_type == "Polygon":
                 try:
-                    x, y = lote_geom.exterior.coords.xy
+                    x, y = list(lote_geom.exterior.coords.xy[0]), list(lote_geom.exterior.coords.xy[1])
                     area = lote_geom.area
                     ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
                     altura = (ca * area) / (area**0.5)
