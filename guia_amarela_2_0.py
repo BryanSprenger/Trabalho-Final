@@ -22,7 +22,8 @@ pagina = st.sidebar.radio(
     ("🏠 Home", "🏗️ Potencial Construtivo", "📐 Área de Ocupação", "📊 Indicadores Urbanísticos", "🗺️ Mapa Interativo")
 )
 
-# --- HOME ---
+# ------------------------------------------------------------------------------ HOME -----------------------------------------------------------------------------------------------
+
 if pagina == "🏠 Home":
     st.title("Guia Amarela Interativa")
     st.markdown("""
@@ -35,7 +36,8 @@ if pagina == "🏠 Home":
     - Explicações sobre zoneamento, coeficiente de aproveitamento, recuos, etc.
     """)
 
-# --- POTENCIAL CONSTRUTIVO ---
+# ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
+
 elif pagina == "🏗️ Potencial Construtivo":
     st.title("Potencial Construtivo")
 
@@ -49,52 +51,62 @@ elif pagina == "🏗️ Potencial Construtivo":
 
     # Verifica se foi digitado algo
     if ind_fiscal:
-        # Filtra o lote correspondente
         lote_filtrado = gdf[gdf["INDFISCAL"] == ind_fiscal]
 
         if lote_filtrado.empty:
             st.warning("Nenhum lote encontrado com essa indicação fiscal.")
         else:
-            lote = lote_filtrado.geometry.values[0]
+            lote_geom = lote_filtrado.geometry.values[0]
 
-            # Se for multipolígono, pega o primeiro
-            if lote.geom_type == "MultiPolygon":
-                lote = list(lote.geoms)[0]
+            # Garantir que seja um Polygon simples
+            if lote_geom.is_empty:
+                st.error("A geometria do lote está vazia.")
+            elif lote_geom.geom_type == "MultiPolygon":
+                # Pega o maior polígono do MultiPolygon
+                lote_geom = max(lote_geom.geoms, key=lambda a: a.area)
 
-            x, y = lote.exterior.coords.xy
-            z_base = [0] * len(x)
-            area = lote.area
+            if lote_geom.geom_type == "Polygon":
+                try:
+                    x, y = lote_geom.exterior.coords.xy
+                    area = lote_geom.area
+                    ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
+                    altura = (ca * area) / (area**0.5)
+                    z_base = [0] * len(x)
+                    z_top = [altura] * len(x)
 
-            ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
-            altura = (ca * area) / (area ** 0.5)
-            z_top = [altura] * len(x)
+                    fig = go.Figure()
 
-            fig = go.Figure()
+                    # base
+                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
+                                               line=dict(color='blue', width=4), name='Base'))
 
-            # base
-            fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
-                                       line=dict(color='blue', width=4), name='Base'))
+                    # topo
+                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
+                                               line=dict(color='lightblue', width=4), name='Topo'))
 
-            # topo
-            fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
-                                       line=dict(color='lightblue', width=4), name='Topo'))
+                    # laterais
+                    for i in range(len(x)):
+                        fig.add_trace(go.Scatter3d(
+                            x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
+                            mode='lines', line=dict(color='lightblue', width=2), showlegend=False
+                        ))
 
-            for i in range(len(x)):
-                fig.add_trace(go.Scatter3d(
-                    x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
-                    mode='lines', line=dict(color='lightblue', width=2), showlegend=False
-                ))
+                    fig.update_layout(
+                        scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
+                        margin=dict(l=0, r=0, b=0, t=30)
+                    )
 
-            fig.update_layout(
-                scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
-                margin=dict(l=0, r=0, b=0, t=30)
-            )
+                    st.plotly_chart(fig, use_container_width=True)
 
-            st.plotly_chart(fig, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Erro ao gerar visualização 3D: {e}")
+            else:
+                st.error("A geometria selecionada não é um polígono válido.")
     else:
         st.info("Insira a Indicação Fiscal para visualizar o lote.")
+   
+# --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
-# --- INDICADORES ---
 elif pagina == "📊 Indicadores Urbanísticos":
     st.title("Indicadores Urbanísticos")
     st.markdown("Apresenta valores de altura máxima, CA, recuos e outros parâmetros em formato de tabela ou gráfico.")
@@ -109,7 +121,8 @@ elif pagina == "📊 Indicadores Urbanísticos":
     df = pd.DataFrame(dados)
     st.table(df)
 
-# --- MAPA INTERATIVO ---
+# ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
+
 elif pagina == "🗺️ Mapa Interativo":
     st.title("Mapa Interativo")
 
