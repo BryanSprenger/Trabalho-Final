@@ -185,6 +185,25 @@ elif pagina == "📐 Área de Ocupação":
                     )
 
                     st.plotly_chart(fig2, use_container_width=True)
+                    # Gráfico de pizza da ocupação
+                    ocupacao_labels = ['Área Ocupada', 'Área Livre']
+                    ocupacao_values = [area_ocupada, area_total - area_ocupada]
+                    ocupacao_colors = ['green', 'lightgray']
+
+                    fig_pizza = go.Figure(data=[go.Pie(
+                        labels=ocupacao_labels,
+                        values=ocupacao_values,
+                        marker=dict(colors=ocupacao_colors),
+                        hole=0.4
+                        )])
+
+                    fig_pizza.update_layout(
+                        title="Distribuição da Ocupação no Lote",
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        height=400
+                    )
+
+                    st.plotly_chart(fig_pizza, use_container_width=True)
                     st.markdown(f"**Área ocupada:** {area_ocupada:.2f} m²")
 
                 except Exception as e:
