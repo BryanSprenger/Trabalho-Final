@@ -18,9 +18,6 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2025.csv"
 }
 
-# Dataframes
-df_alvaras = pd.read_csv(url_relatório2025, encoding='utf-8', sep=';')
-
 #GeoDataFrame
 gdf = gpd.read_file(url_lotes)
 gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
