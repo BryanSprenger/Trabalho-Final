@@ -264,7 +264,7 @@ elif pagina == "🗺️ Mapa Interativo":
 #---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
 
 elif pagina == "Análise Estatística de Emissão de Alvarás":
-    st.title("Análise Estatística de Emissão de Alvarás")
+    st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
     gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
     
