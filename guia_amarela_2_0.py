@@ -15,10 +15,9 @@ url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-F
 df_alvaras = pd.read_csv(url_alvaras, encoding='utf-8', sep=';')
 
 #GeoDataFrame
-    # Carrega o GeoDataFrame
-    gdf = gpd.read_file(url_lotes)
-    gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
-    gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
+gdf = gpd.read_file(url_lotes)
+gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
+gdf = gdf.merge(df_alvaras, on='INDFISCAL', how='left')
 
 
 
