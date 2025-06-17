@@ -12,7 +12,7 @@ url_relatório2025 = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-F
 
 
 # Dataframes
-df_alvaras = pd.read_csv('alvaras_2025.csv')
+df_alvaras = pd.read_csv('url_relatório2025')
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -267,7 +267,7 @@ elif aba == "Análise Estatística de Emissão de Alvarás":
     st.title("Análise Estatística de Emissão de Alvarás")
 
     # Caixa para selecionar o ano
-    anos_disponiveis = ("20225", "2024", "2023", "2022")
+    anos_disponiveis = ("2025", "2024", "2023", "2022")
     ano_selecionado = st.selectbox("Selecione o ano:", sorted(anos_disponiveis, reverse=True))
 
     # Filtra os dados
