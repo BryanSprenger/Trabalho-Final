@@ -273,50 +273,74 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 # Seleção de ano
     ano = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
 
-# Carregamento dos dados de alvarás
-    try:
-        df_alvaras = pd.read_csv(urls_alvaras[ano], sep=';', encoding='utf-8')
-        st.success(f"Relatório de alvarás de {ano} carregado com sucesso.")
-    except Exception as e:
-        st.error(f"Erro ao carregar dados de alvarás: {e}")
-        st.stop()
+# Carrega o arquivo correspondente
+url_csv = urls_relatorios[ano_selecionado]
+try:
+    df_alvaras = pd.read_csv(url_csv)
+    st.success(f"Relatório de {ano_selecionado} carregado com sucesso!")
+except Exception as e:
+    st.error(f"Erro ao carregar o relatório: {e}")
 
-# Verificação das colunas mínimas necessárias
-    colunas_necessarias = ['INDFISCAL', 'Uso(s) Alvará']
-    if not all(col in df_alvaras.columns for col in colunas_necessarias):
-        st.error("O relatório selecionado não contém as colunas esperadas.")
-        st.stop()
+# Verifica se o GeoDataFrame de lotes está carregado
+if 'gdf_lotes' in globals():
 
-# Cruzamento entre lote e alvará por INDFISCAL
+    # Padroniza o tipo da coluna INDFISCAL
     df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
-    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-    gdf_alvaras = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
+    # Verifica se a coluna INDFISCAL existe em gdf_lotes, mesmo com outro nome
+    col_fiscal_lotes = None
+    for col in gdf_lotes.columns:
+        if 'fiscal' in col.lower():
+            col_fiscal_lotes = col
+            break
 
-# Mapa com tipologias por cor
-    st.subheader("Mapa de alvarás emitidos por tipologia")
+    if col_fiscal_lotes:
+        gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
+        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-    m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
+        # Cruzamento
+        gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
-# Paleta de cores básica
-    tipologias = gdf_alvaras["Uso(s) Alvará"].unique()
-    cores = px.colors.qualitative.Safe  # até 10 cores distintas
-    cores_dict = {tip: cores[i % len(cores)] for i, tip in enumerate(tipologias)}
+        num_cruzamentos = len(gdf_alvaras_lotes)
+        if num_cruzamentos > 0:
+            st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
+        else:
+            st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
 
-    for _, row in gdf_alvaras.iterrows():
-        cor = cores_dict.get(row['TIPOLOGIA'], 'gray')
-        folium.GeoJson(
-            row.geometry,
-            tooltip=f"INDFISCAL: {row['INDFISCAL']}<br>TIPOLOGIA: {row['Uso(s) Alvará']}",
-            style_function=lambda feature, color=cor: {
-                'fillColor': color,
-                'color': 'black',
-                'weight': 1,
-                'fillOpacity': 0.6,
-            }
-        ).add_to(m)
+        # Mapa com destaque por tipologia
+        st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos")
 
-    st_folium(m, width=1000, height=500)
+        if 'TIPOLOGIA' in gdf_alvaras_lotes.columns:
+            m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+
+            for _, row in gdf_alvaras_lotes.iterrows():
+                color = {
+                    "Residencial": "green",
+                    "Comercial": "blue",
+                    "Misto": "orange",
+                    "Industrial": "red"
+                }.get(row['TIPOLOGIA'], "gray")
+
+                folium.GeoJson(
+                    row['geometry'],
+                    name=row.get("INDFISCAL", ""),
+                    tooltip=row.get("TIPOLOGIA", "Sem tipologia"),
+                    style_function=lambda x, color=color: {
+                        "fillColor": color,
+                        "color": "black",
+                        "weight": 1,
+                        "fillOpacity": 0.5
+                    }
+                ).add_to(m_alvaras)
+
+            folium.LayerControl().add_to(m_alvaras)
+            st_folium(m_alvaras, width=900, height=500)
+        else:
+            st.info("O campo 'TIPOLOGIA' não está presente no relatório.")
+    else:
+        st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
+else:
+    st.error("❌ O GeoDataFrame de lotes ainda não foi carregado.")
 
 # Gráfico de barras das tipologias
     st.subheader("Distribuição de alvarás por tipologia")
