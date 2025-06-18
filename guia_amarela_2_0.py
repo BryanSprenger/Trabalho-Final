@@ -272,7 +272,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
 # Seleção do ano pelo usuário
 ano_selecionado = st.selectbox("Selecione o ano do relatório", list(urls_alvaras.keys()))
-url_csv = urls_relatorios[ano_selecionado]
+url_csv = urls_alvaras[ano_selecionado]
 
 # Carregamento dos dados de alvarás
 try:
