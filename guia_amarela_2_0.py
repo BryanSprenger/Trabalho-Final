@@ -328,10 +328,10 @@ for _, row in gdf_alvaras_lotes.iterrows():
 
 folium.LayerControl().add_to(m_alvaras)
 st_folium(m_alvaras, width=900, height=500)
-else:
-    st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
     else:
-        st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
+        st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
+        else:
+            st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
 else:
     st.error("❌ O GeoDataFrame de lotes ainda não foi carregado.")
 
