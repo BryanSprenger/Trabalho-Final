@@ -251,7 +251,7 @@ elif pagina == "🗺️ Mapa Interativo":
     campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  # substitua por campos que existam de verdade
 
     folium.GeoJson(
-        gdf,
+        gdf_lotes,
         name="Lotes",
         tooltip=folium.GeoJsonTooltip(
             fields=campos_seguro,
