@@ -271,7 +271,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
 # Seleção de ano
-    ano = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
+    ano_selecionado = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
 
 # Carrega o arquivo correspondente
 url_csv = urls_relatorios[ano_selecionado]
@@ -287,14 +287,7 @@ if 'gdf_lotes' in globals():
     # Padroniza o tipo da coluna INDFISCAL
     df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
 
-    # Verifica se a coluna INDFISCAL existe em gdf_lotes, mesmo com outro nome
-    col_fiscal_lotes = None
-    for col in gdf_lotes.columns:
-        if 'fiscal' in col.lower():
-            col_fiscal_lotes = col
-            break
-
-    if col_fiscal_lotes:
+        if col_fiscal_lotes:
         gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
@@ -315,16 +308,16 @@ if 'gdf_lotes' in globals():
 
             for _, row in gdf_alvaras_lotes.iterrows():
                 color = {
-                    "Residencial": "green",
-                    "Comercial": "blue",
-                    "Misto": "orange",
-                    "Industrial": "red"
-                }.get(row['TIPOLOGIA'], "gray")
+                    "Habitação Unifamiliar": "green",
+                    "Comércio e Serviço de Bairro": "blue",
+                    "Habitação Unifamiliar em Série": "orange",
+                    "Comércio e Serviço Setorial": "red"
+                }.get(row['Uso(s) Alvará'], "gray")
 
                 folium.GeoJson(
                     row['geometry'],
                     name=row.get("INDFISCAL", ""),
-                    tooltip=row.get("TIPOLOGIA", "Sem tipologia"),
+                    tooltip=row.get("Uso(s) Alvará", ""),
                     style_function=lambda x, color=color: {
                         "fillColor": color,
                         "color": "black",
@@ -336,21 +329,21 @@ if 'gdf_lotes' in globals():
             folium.LayerControl().add_to(m_alvaras)
             st_folium(m_alvaras, width=900, height=500)
         else:
-            st.info("O campo 'TIPOLOGIA' não está presente no relatório.")
+            st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
     else:
         st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
 else:
     st.error("❌ O GeoDataFrame de lotes ainda não foi carregado.")
 
 # Gráfico de barras das tipologias
-    st.subheader("Distribuição de alvarás por tipologia")
+    st.subheader("Distribuição de alvarás por Uso")
 
     tipologia_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
     tipologia_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
 
-    fig = px.bar(tipologia_counts, x='TIPOLOGIA', y='QUANTIDADE',
+    fig = px.bar(tipologia_counts, x='Uso(s) Alvará', y='QUANTIDADE',
                  title=f'Alvarás emitidos por tipologia - {ano}',
-                 labels={'TIPOLOGIA': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
+                 labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
                  color='TIPOLOGIA',
                  color_discrete_map=cores_dict)
 
