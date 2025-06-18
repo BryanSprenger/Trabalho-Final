@@ -270,81 +270,83 @@ elif pagina == "🗺️ Mapa Interativo":
 elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
-# Seleção de ano
-    ano_selecionado = st.selectbox("Selecione o ano do relatório de alvarás:", list(urls_alvaras.keys()))
-
-# Carrega o arquivo correspondente
+# Seleção do ano pelo usuário
+ano_selecionado = st.selectbox("Selecione o ano do relatório", list(urls_relatorios.keys()))
 url_csv = urls_relatorios[ano_selecionado]
+
+# Carregamento dos dados de alvarás
 try:
     df_alvaras = pd.read_csv(url_csv)
-    st.success(f"Relatório de {ano_selecionado} carregado com sucesso!")
+    st.success(f"Relatório de alvarás de {ano_selecionado} carregado com sucesso.")
 except Exception as e:
-    st.error(f"Erro ao carregar o relatório: {e}")
+    st.error(f"Erro ao carregar os dados do relatório: {e}")
+    st.stop()
 
-# Verifica se o GeoDataFrame de lotes está carregado
-if 'gdf_lotes' in globals():
-
-# Padroniza o tipo da coluna INDFISCAL
-    df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+# Verifica se a coluna INDFISCAL existe no gdf_lotes
+col_fiscal_lotes = None
+for col in gdf_lotes.columns:
+    if 'fiscal' in col.lower():
+        col_fiscal_lotes = col
+        break
 
 if col_fiscal_lotes:
+    # Padroniza a coluna
     gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
     gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+    df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
 
-# Cruzamento
-gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
+    # Cruzamento entre alvarás e lotes
+    gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
-num_cruzamentos = len(gdf_alvaras_lotes)
-if num_cruzamentos > 0:
-    st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
-else:
-    st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
-
-# Mapa com destaque por tipologia
-st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos")
-
-if 'TIPOLOGIA' in gdf_alvaras_lotes.columns:
-    m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
-
-for _, row in gdf_alvaras_lotes.iterrows():
-    color = {
-        "Habitação Unifamiliar": "green",
-        "Comércio e Serviço de Bairro": "blue",
-        "Habitação Unifamiliar em Série": "orange",
-        "Comércio e Serviço Setorial": "red"
-    }.get(row['Uso(s) Alvará'], "gray")
-
-    folium.GeoJson(
-        row['geometry'],
-        name=row.get("INDFISCAL", ""),
-        tooltip=row.get("Uso(s) Alvará", ""),
-        style_function=lambda x, color=color: {
-            "fillColor": color,
-            "color": "black",
-            "weight": 1,
-            "fillOpacity": 0.5
-        }
-    ).add_to(m_alvaras)
-
-folium.LayerControl().add_to(m_alvaras)
-st_folium(m_alvaras, width=900, height=500)
+    num_cruzamentos = len(gdf_alvaras_lotes)
+    if num_cruzamentos > 0:
+        st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
     else:
-        st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
-        else:
-            st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
+        st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
+
+    # Verifica se a coluna de uso existe
+    if 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
+        st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
+
+        m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+
+        # Cores por uso
+        usos = gdf_alvaras_lotes['Uso(s) Alvará'].unique()
+        cores = px.colors.qualitative.Safe
+        cores_dict = {uso: cores[i % len(cores)] for i, uso in enumerate(usos)}
+
+        for _, row in gdf_alvaras_lotes.iterrows():
+            uso = row['Uso(s) Alvará']
+            cor = cores_dict.get(uso, "gray")
+
+            folium.GeoJson(
+                row.geometry,
+                name=row.get("INDFISCAL", ""),
+                tooltip=f"INDFISCAL: {row['INDFISCAL']}<br>Uso: {uso}",
+                style_function=lambda x, color=cor: {
+                    "fillColor": color,
+                    "color": "black",
+                    "weight": 1,
+                    "fillOpacity": 0.5
+                }
+            ).add_to(m_alvaras)
+
+        folium.LayerControl().add_to(m_alvaras)
+        st_folium(m_alvaras, width=900, height=500)
+
+        # Gráfico de barras com distribuição por uso
+        st.subheader("📊 Distribuição de Alvarás por Uso")
+        uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
+        uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
+
+        fig = px.bar(uso_counts, x='Uso(s) Alvará', y='QUANTIDADE',
+                     title=f'Alvarás emitidos por uso - {ano_selecionado}',
+                     labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
+                     color='Uso(s) Alvará',
+                     color_discrete_map=cores_dict)
+
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
 else:
-    st.error("❌ O GeoDataFrame de lotes ainda não foi carregado.")
-
-# Gráfico de barras das tipologias
-    st.subheader("Distribuição de alvarás por Uso")
-
-    tipologia_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
-    tipologia_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
-
-    fig = px.bar(tipologia_counts, x='Uso(s) Alvará', y='QUANTIDADE',
-                 title=f'Alvarás emitidos por tipologia - {ano}',
-                 labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
-                 color='TIPOLOGIA',
-                 color_discrete_map=cores_dict)
-
-    st.plotly_chart(fig, use_container_width=True)
+    st.error("❌ A coluna com a indicação fiscal não foi encontrada no GeoDataFrame dos lotes.")
