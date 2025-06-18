@@ -19,8 +19,8 @@ urls_alvaras = {
 }
 
 #GeoDataFrame
-gdf = gpd.read_file(url_lotes)
-gdf = gdf[gdf.is_valid & ~gdf.geometry.is_empty]
+gdf_lotes = gpd.read_file(url_lotes)
+gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
