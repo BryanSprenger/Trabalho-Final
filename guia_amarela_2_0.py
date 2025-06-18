@@ -285,7 +285,7 @@ except Exception as e:
 if 'gdf_lotes' in globals():
 
 # Padroniza o tipo da coluna INDFISCAL
-df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+    df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
 
 if col_fiscal_lotes:
     gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
