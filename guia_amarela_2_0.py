@@ -284,52 +284,52 @@ except Exception as e:
 # Verifica se o GeoDataFrame de lotes está carregado
 if 'gdf_lotes' in globals():
 
-    # Padroniza o tipo da coluna INDFISCAL
-    df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+# Padroniza o tipo da coluna INDFISCAL
+df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
 
-        if col_fiscal_lotes:
-        gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
-        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+if col_fiscal_lotes:
+    gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-        # Cruzamento
-        gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
+# Cruzamento
+gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
-        num_cruzamentos = len(gdf_alvaras_lotes)
-        if num_cruzamentos > 0:
-            st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
-        else:
-            st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
+num_cruzamentos = len(gdf_alvaras_lotes)
+if num_cruzamentos > 0:
+    st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
+else:
+    st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
 
-        # Mapa com destaque por tipologia
-        st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos")
+# Mapa com destaque por tipologia
+st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos")
 
-        if 'TIPOLOGIA' in gdf_alvaras_lotes.columns:
-            m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+if 'TIPOLOGIA' in gdf_alvaras_lotes.columns:
+    m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
 
-            for _, row in gdf_alvaras_lotes.iterrows():
-                color = {
-                    "Habitação Unifamiliar": "green",
-                    "Comércio e Serviço de Bairro": "blue",
-                    "Habitação Unifamiliar em Série": "orange",
-                    "Comércio e Serviço Setorial": "red"
-                }.get(row['Uso(s) Alvará'], "gray")
+for _, row in gdf_alvaras_lotes.iterrows():
+    color = {
+        "Habitação Unifamiliar": "green",
+        "Comércio e Serviço de Bairro": "blue",
+        "Habitação Unifamiliar em Série": "orange",
+        "Comércio e Serviço Setorial": "red"
+    }.get(row['Uso(s) Alvará'], "gray")
 
-                folium.GeoJson(
-                    row['geometry'],
-                    name=row.get("INDFISCAL", ""),
-                    tooltip=row.get("Uso(s) Alvará", ""),
-                    style_function=lambda x, color=color: {
-                        "fillColor": color,
-                        "color": "black",
-                        "weight": 1,
-                        "fillOpacity": 0.5
-                    }
-                ).add_to(m_alvaras)
+    folium.GeoJson(
+        row['geometry'],
+        name=row.get("INDFISCAL", ""),
+        tooltip=row.get("Uso(s) Alvará", ""),
+        style_function=lambda x, color=color: {
+            "fillColor": color,
+            "color": "black",
+            "weight": 1,
+            "fillOpacity": 0.5
+        }
+    ).add_to(m_alvaras)
 
-            folium.LayerControl().add_to(m_alvaras)
-            st_folium(m_alvaras, width=900, height=500)
-        else:
-            st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
+folium.LayerControl().add_to(m_alvaras)
+st_folium(m_alvaras, width=900, height=500)
+else:
+    st.info("O campo 'Uso(s) Alvará' não está presente no relatório.")
     else:
         st.error("❌ A coluna com a indicação fiscal não foi encontrada em gdf_lotes.")
 else:
