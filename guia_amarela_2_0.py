@@ -276,7 +276,7 @@ url_csv = urls_alvaras[ano_selecionado]
 
 # Carregamento dos dados de alvarás
 try:
-    df_alvaras = pd.read_csv(url_csv)
+    df_alvaras = pd.read_csv(url_csv, sep=';')
     st.success(f"Relatório de alvarás de {ano_selecionado} carregado com sucesso.")
 except Exception as e:
     st.error(f"Erro ao carregar os dados do relatório: {e}")
