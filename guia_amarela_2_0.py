@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # Carregamento dos dados dos Lotes
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_4.geojson"
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_6.geojson"
 
 #Carregando os relatórios de Alvará
 # Mapeamento de anos para URLs dos arquivos CSV
