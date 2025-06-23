@@ -364,9 +364,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         ).add_to(m_alvaras)
         
         
-        st.write("CRS do GeoDataFrame:", gdf_alvaras_lotes.crs)
-
-        lote_teste = gdf_alvaras_lotes.iloc[[0]]  # usa duplo colchete para manter como GeoDataFrame
+                lote_teste = gdf_alvaras_lotes.iloc[[0]]  # usa duplo colchete para manter como GeoDataFrame
         folium.GeoJson(
             lote_teste,
             tooltip=folium.GeoJsonTooltip(fields=["INDFISCAL", "Uso(s) Alvará"])
