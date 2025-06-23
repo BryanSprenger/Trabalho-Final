@@ -363,7 +363,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
             }
         ).add_to(m_alvaras)
                                
-            folium.LayerControl().add_to(m_alvaras)
+        folium.LayerControl().add_to(m_alvaras)
         st_folium(m_alvaras, width="100%", height=700)
    
     elif num_cruzamentos > 0:
