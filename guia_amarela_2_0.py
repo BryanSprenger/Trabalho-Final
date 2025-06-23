@@ -378,18 +378,18 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     elif num_cruzamentos > 0:
         st.warning("⚠️ A coluna 'Uso(s) Alvará' não foi encontrada nos dados cruzados.")
 
-            # Gráfico de barras com distribuição por uso
-        st.subheader("📊 Distribuição de Alvarás por Uso")
-        uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
-        uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
+    # Gráfico de barras com distribuição por uso
+    st.subheader("📊 Distribuição de Alvarás por Uso")
+    uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
+    uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
 
-        fig = px.bar(uso_counts, x='Uso(s) Alvará', y='QUANTIDADE',
+    fig = px.bar(uso_counts, x='Uso(s) Alvará', y='QUANTIDADE',
                         title=f'Alvarás emitidos por uso - {ano_selecionado}',
                         labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
                         color='Uso(s) Alvará',
                         color_discrete_map=cores_dict)
 
-        st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
 else:
