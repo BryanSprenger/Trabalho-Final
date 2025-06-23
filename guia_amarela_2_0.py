@@ -367,8 +367,8 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
                 
     
         folium.LayerControl().add_to(m_alvaras)
-        st_folium(m_alvaras, width=900, height=500)
-    
+        st_folium(m_alvaras, width="100%", height=700)
+   
     elif num_cruzamentos > 0:
         st.warning("⚠️ A coluna 'Uso(s) Alvará' não foi encontrada nos dados cruzados.")
 
