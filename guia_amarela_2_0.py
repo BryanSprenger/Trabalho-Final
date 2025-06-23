@@ -6,9 +6,15 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Carregamento dos dados dos Lotes
-url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_6.geojson"
 
+
+@st.cache_data(show_spinner="Carregando dados dos lotes...")
+def carregar_lotes():
+    url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_6.geojson"
+    gdf_lotes = gpd.read_file(url_lotes)
+    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+
+    
 #Carregando os relatórios de Alvará
 # Mapeamento de anos para URLs dos arquivos CSV
 urls_alvaras = {
@@ -40,9 +46,8 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
         }
 
-#GeoDataFrame
-gdf_lotes = gpd.read_file(url_lotes)
-gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+    gdf_lotes = carregar_lotes()
+       
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
