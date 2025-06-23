@@ -379,7 +379,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         st.warning("⚠️ A coluna 'Uso(s) Alvará' não foi encontrada nos dados cruzados.")
 
             # Gráfico de barras com distribuição por uso
-            st.subheader("📊 Distribuição de Alvarás por Uso")
+        st.subheader("📊 Distribuição de Alvarás por Uso")
             uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
             uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
 
