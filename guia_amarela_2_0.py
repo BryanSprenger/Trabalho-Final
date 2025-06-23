@@ -319,50 +319,55 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
         df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].str.replace('.', '', regex=False)
 
-        # Cruzamento entre alvarás e lotes
-        gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
-
-        indfiscal_lotes = set(gdf_lotes['INDFISCAL'].unique())
-        indfiscal_alvaras = set(df_alvaras['INDFISCAL'].unique())
-
-        interseccao = indfiscal_lotes.intersection(indfiscal_alvaras)
-        st.write(f"🔍 Foram encontradas {len(interseccao)} indicações fiscais em comum entre alvarás e lotes.")
-
-        num_cruzamentos = len(gdf_alvaras_lotes)
-        if num_cruzamentos > 0:
-            st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
-        else:
-            st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
-
-           # Verifica se a coluna de uso existe
-        if 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
-            st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
-
-            m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
-
-            # Cores por uso
-            usos = gdf_alvaras_lotes['Uso(s) Alvará'].unique()
-            cores = px.colors.qualitative.Safe
-            cores_dict = {uso: cores[i % len(cores)] for i, uso in enumerate(usos)}
-
-            for _, row in gdf_alvaras_lotes.iterrows():
-                uso = row['Uso(s) Alvará']
-                cor = cores_dict.get(uso, "gray")
-
-                folium.GeoJson(
-                    row.geometry,
-                    name=row.get("INDFISCAL", ""),
-                    tooltip=f"INDFISCAL: {row['INDFISCAL']}<br>Uso: {uso}",
-                    style_function=lambda x, color=cor: {
-                        "fillColor": color,
-                        "color": "black",
-                        "weight": 1,
-                        "fillOpacity": 0.5
-                    }
-                ).add_to(m_alvaras)
-
-            folium.LayerControl().add_to(m_alvaras)
-            st_folium(m_alvaras, width=900, height=500)
+           # Cruzamento entre alvarás e lotes
+    gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
+    
+    # Verifica interseção de INDFISCAL
+    indfiscal_lotes = set(gdf_lotes['INDFISCAL'].unique())
+    indfiscal_alvaras = set(df_alvaras['INDFISCAL'].unique())
+    interseccao = indfiscal_lotes.intersection(indfiscal_alvaras)
+    
+    st.write(f"🔍 Foram encontradas {len(interseccao)} indicações fiscais em comum entre alvarás e lotes.")
+    
+    num_cruzamentos = len(gdf_alvaras_lotes)
+    if num_cruzamentos > 0:
+        st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
+    else:
+        st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
+    
+    # Visualização no mapa, se houver cruzamentos
+    if num_cruzamentos > 0 and 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
+        st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
+    
+        m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+    
+        # Cores por uso
+        usos = gdf_alvaras_lotes['Uso(s) Alvará'].unique()
+        cores = px.colors.qualitative.Safe
+        cores_dict = {uso: cores[i % len(cores)] for i, uso in enumerate(usos)}
+    
+        # Adiciona todos os lotes ao mapa de uma vez, com estilos por uso
+        folium.GeoJson(
+            gdf_alvaras_lotes,
+            name="Lotes com Alvará",
+            tooltip=folium.GeoJsonTooltip(
+                fields=["INDFISCAL", "Uso(s) Alvará"],
+                aliases=["Indicação Fiscal", "Uso"],
+                sticky=True
+            ),
+            style_function=lambda feature: {
+                "fillColor": cores_dict.get(feature["properties"]["Uso(s) Alvará"], "gray"),
+                "color": "black",
+                "weight": 1,
+                "fillOpacity": 0.5
+            }
+        ).add_to(m_alvaras)
+    
+        folium.LayerControl().add_to(m_alvaras)
+        st_folium(m_alvaras, width=900, height=500)
+    
+    elif num_cruzamentos > 0:
+        st.warning("⚠️ A coluna 'Uso(s) Alvará' não foi encontrada nos dados cruzados.")
 
             # Gráfico de barras com distribuição por uso
             st.subheader("📊 Distribuição de Alvarás por Uso")
