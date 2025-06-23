@@ -268,7 +268,7 @@ elif pagina == "🗺️ Mapa Interativo":
     st.title("Mapa Interativo")
 
         # --- Criação do Mapa Base Folium ---
-    m = folium.Map(location=[-25.46, -49.30], zoom_start=10, tiles="CartoDB positron")
+    m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
 
     # Adiciona a camada GeoJSON
     campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  
