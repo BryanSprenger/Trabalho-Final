@@ -268,7 +268,7 @@ elif pagina == "🗺️ Mapa Interativo":
     st.title("Mapa Interativo")
 
         # --- Criação do Mapa Base Folium ---
-    m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
+    m = folium.Map(location=[-25.46, -49.27], zoom_start=15, tiles="CartoDB positron")
 
     # Adiciona a camada GeoJSON
     campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  
@@ -362,11 +362,8 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
                 "fillOpacity": 0.5
             }
         ).add_to(m_alvaras)
-        
-        
-                
-    
-        folium.LayerControl().add_to(m_alvaras)
+                               
+            folium.LayerControl().add_to(m_alvaras)
         st_folium(m_alvaras, width="100%", height=700)
    
     elif num_cruzamentos > 0:
