@@ -320,6 +320,12 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         # Cruzamento entre alvarás e lotes
         gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
+        indfiscal_lotes = set(gdf_lotes['INDFISCAL'].unique())
+        indfiscal_alvaras = set(df_alvaras['INDFISCAL'].unique())
+
+        interseccao = indfiscal_lotes.intersection(indfiscal_alvaras)
+        st.write(f"🔍 Foram encontradas {len(interseccao)} indicações fiscais em comum entre alvarás e lotes.")
+
         num_cruzamentos = len(gdf_alvaras_lotes)
         if num_cruzamentos > 0:
             st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
