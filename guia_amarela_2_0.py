@@ -12,10 +12,32 @@ url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main
 #Carregando os relatórios de Alvará
 # Mapeamento de anos para URLs dos arquivos CSV
 urls_alvaras = {
-    "2022": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2022.csv",
-    "2023": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2023.csv",
-    "2024": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2024.csv",
-    "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/RELATORIO2025.csv"
+    "2000": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2000.csv",
+    "2001": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2001.csv",
+    "2002": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2002.csv",
+    "2003": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2003.csv",
+    "2004": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2004.csv",
+    "2005": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2005.csv",
+    "2006": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2006.csv",
+    "2007": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2007.csv",
+    "2008": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2008.csv",
+    "2009": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2009.csv",
+    "2010": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2010.csv",
+    "2011": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2011.csv",
+    "2012": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2012.csv",
+    "2013": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2013.csv",
+    "2014": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2014.csv",
+    "2015": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2015.csv",
+    "2016": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2016.csv",
+    "2017": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2017.csv",
+    "2018": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2018.csv",
+    "2019": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2019.csv",
+    "2020": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2020.csv",
+    "2021": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2021.csv",
+    "2022": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2022.csv",
+    "2023": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2023.csv",
+    "2024": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2024.csv",
+    "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/RELATÓRIOS/RELATORIO2025.csv"
 }
 
 #GeoDataFrame
@@ -248,7 +270,7 @@ elif pagina == "🗺️ Mapa Interativo":
     m = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles="CartoDB positron")
 
     # Adiciona a camada GeoJSON
-    campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  # substitua por campos que existam de verdade
+    campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  
 
     folium.GeoJson(
         gdf_lotes,
