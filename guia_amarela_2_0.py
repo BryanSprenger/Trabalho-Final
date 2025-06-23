@@ -390,7 +390,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
                         color_discrete_map=cores_dict)
 
     st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
+else:
+    st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
     else:
          st.error("❌ A coluna com a indicação fiscal não foi encontrada no GeoDataFrame dos lotes.")
