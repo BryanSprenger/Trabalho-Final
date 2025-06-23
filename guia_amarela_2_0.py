@@ -326,6 +326,10 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         else:
             st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
 
+    st.write("Exemplos de INDFISCAL em gdf_lotes:", gdf_lotes['INDFISCAL'].dropna().unique()[:10])
+    st.write("Exemplos de INDFISCAL em df_alvaras:", df_alvaras['INDFISCAL'].dropna().unique()[:10])
+
+
         # Verifica se a coluna de uso existe
         if 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
             st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
