@@ -7,12 +7,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 
-
-@st.cache_data(show_spinner="Carregando dados dos lotes...")
-def carregar_lotes():
-    url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_6.geojson"
-    gdf_lotes = gpd.read_file(url_lotes)
-    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+url_lotes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/main/Lotes2021_6.geojson"
+gdf_lotes = gpd.read_file(url_lotes)
+gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
 
     
 #Carregando os relatórios de Alvará
