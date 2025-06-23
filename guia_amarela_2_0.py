@@ -46,7 +46,7 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
         }
 
-    gdf_lotes = carregar_lotes()
+gdf_lotes = carregar_lotes()
        
 
 # --- Configuração da Página Streamlit ---
