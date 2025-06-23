@@ -37,7 +37,7 @@ urls_alvaras = {
     "2022": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATÓRIOS/RELATORIO_2022.csv",
     "2023": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATÓRIOS/RELATORIO_2023.csv",
     "2024": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATÓRIOS/RELATORIO_2024.csv",
-    "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELAT%C3%93RIOS/RELATORIO_2000.csv""
+    "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELAT%C3%93RIOS/RELATORIO_2000.csv"
 }
 
 #GeoDataFrame
