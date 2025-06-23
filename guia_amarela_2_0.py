@@ -380,8 +380,8 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
             # Gráfico de barras com distribuição por uso
         st.subheader("📊 Distribuição de Alvarás por Uso")
-            uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
-            uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
+        uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
+        uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
 
             fig = px.bar(uso_counts, x='Uso(s) Alvará', y='QUANTIDADE',
                          title=f'Alvarás emitidos por uso - {ano_selecionado}',
