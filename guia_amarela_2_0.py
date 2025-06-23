@@ -339,7 +339,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     if num_cruzamentos > 0 and 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
         st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
     
-        m_alvaras = folium.Map(location=[-25.46, -49.27], zoom_start=12, tiles='CartoDB positron')
+        m_alvaras = folium.Map(location=[-25.46, -49.30], zoom_start=15, tiles='CartoDB positron')
     
         # Cores por uso
         usos = gdf_alvaras_lotes['Uso(s) Alvará'].unique()
