@@ -317,6 +317,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
         gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
         df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+        df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].str.replace('.', '', regex=False)
 
         # Cruzamento entre alvarás e lotes
         gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
