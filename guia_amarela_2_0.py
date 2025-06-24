@@ -48,9 +48,6 @@ urls_alvaras = {
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
 
-st.title("Guia Amarela Interativa")
-st.markdown("Selecione um lote no mapa ou filtre pela inscrição fiscal para visualizar os dados urbanísticos.")
-
 # Menu lateral
 st.sidebar.title("Navegação")
 pagina = st.sidebar.radio(
@@ -62,15 +59,63 @@ pagina = st.sidebar.radio(
 
 if pagina == "🏠 Home":
     st.title("Guia Amarela Interativa")
-    st.markdown("""
-    Esta aplicação visa apresentar as informações da Consulta Informativa de Lote (CIL), também conhecida como Guia Amarela, de forma interativa, visual e acessível.
+    # Estilo customizado CSS (pastel cinza e amarelo claro)
+st.markdown("""
+    <style>
+    .titulo-principal {
+        background-color: #F9E79F;  /* amarelo pastel */
+        padding: 1rem;
+        border-radius: 10px;
+        font-size: 24px;
+        color: #555;
+        text-align: center;
+        font-weight: bold;
+        border: 1px solid #e0e0e0;
+    }
+    .caixa-cinza {
+        background-color: #F2F3F4;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        color: #333;
+    }
+    .destaque {
+        color: #D4AC0D;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-    **Funcionalidades principais:**
-    - Visualização de parâmetros urbanísticos de forma gráfica
-    - Mapa interativo do lote
-    - Simulação de potencial construtivo em 3D
-    - Explicações sobre zoneamento, coeficiente de aproveitamento, recuos, etc.
-    """)
+# Título principal
+st.markdown('<div class="titulo-principal">📒 Guia Amarela Interativa</div>', unsafe_allow_html=True)
+
+# Introdução
+st.markdown("""
+<div class="caixa-cinza">
+    Esta aplicação tem como objetivo <span class="destaque">modernizar a Consulta Informativa de Lote (CIL)</span>,
+    mais conhecida como Guia Amarela, emitida pela Prefeitura de Curitiba.
+    <br><br>
+    Ao invés de um PDF estático e de difícil interpretação, a proposta aqui é entregar um <span class="destaque">relatório interativo</span>
+    com mapas, gráficos, visualizações 3D e explicações acessíveis.
+</div>
+""", unsafe_allow_html=True)
+
+# Funcionalidades principais
+st.markdown("""
+### 🛠️ Funcionalidades já implementadas
+
+- 📍 **Visualização geográfica** dos lotes com base na Indicação Fiscal.
+- 🧱 **Cálculo e visualização do Potencial Construtivo**, com gráfico 3D interativo.
+- 🧮 **Simulação da Taxa de Ocupação** e área livre construída.
+- 📊 **Análise estatística da emissão de alvarás** por ano e tipologia.
+
+""")
+
+# Rodapé informal
+st.markdown("""
+<br>
+<span style='font-size: 12px; color: gray;'>Desenvolvido como trabalho final da disciplina de Desenvolvimento de Aplicações em Ciências Geodésicas.</span>
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
 
