@@ -58,8 +58,7 @@ pagina = st.sidebar.radio(
 # ------------------------------------------------------------------------------ HOME -----------------------------------------------------------------------------------------------
 
 if pagina == "🏠 Home":
-    st.title("Guia Amarela Interativa")
-    # Estilo customizado CSS 
+        # Estilo customizado CSS 
     st.markdown("""
         <style>
         .titulo-principal {
