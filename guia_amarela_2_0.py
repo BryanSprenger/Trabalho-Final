@@ -65,7 +65,7 @@ if pagina == "🏠 Home":
             background-color: #F9E79F;  /* amarelo pastel */
             padding: 1rem;
             border-radius: 10px;
-            font-size: 24px;
+            font-size: 32px;
             color: #555;
             text-align: center;
             font-weight: bold;
