@@ -63,7 +63,7 @@ if pagina == "🏠 Home":
         <style>
         .titulo-principal {
             background-color: #F9E79F;  /* amarelo pastel */
-            padding: 1rem;
+            padding: 0rem;
             border-radius: 10px;
             font-size: 32px;
             color: #555;
