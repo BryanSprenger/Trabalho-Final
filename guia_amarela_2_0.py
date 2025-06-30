@@ -323,7 +323,12 @@ elif pagina == "📊 Indicadores Urbanísticos":
     # URLs dos arquivos
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
     url_indicadores_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
+
+    import requests
+    conteudo_csv = requests.get(url_indicadores_csv).text
+    st.text(conteudo_csv.split('\n')[0:5])  # Exibe as 5 primeiras linhas
     
+
     try:
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
@@ -331,9 +336,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
         st.error(f"Erro ao carregar dados de zoneamento: {e}")
         st.stop()
 
-    import requests
-    conteudo_csv = requests.get(url_indicadores_csv).text
-    st.text(conteudo_csv.split('\n')[0:5])  # Exibe as 5 primeiras linhas
+    
 
     # Normaliza o CRS
     gdf_lotes = gdf_lotes.to_crs("EPSG:4326")
