@@ -142,7 +142,7 @@ elif pagina == "🏗️ Potencial Construtivo":
     if ind_fiscal:
         # Converte coluna e input para string
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
-        ind_fiscal = str(ind_fiscal_input).strip()
+        ind_fiscal = str(ind_fiscal).strip()
     
         # Filtra lote
         lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
