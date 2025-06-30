@@ -466,7 +466,7 @@ elif pagina == "🗺️ Mapa Interativo":
             m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
     else:
         # Mapa inicial padrão
-        m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
+        m = folium.Map(location=[...], zoom_start=..., tiles="CartoDB positron", control_scale=True)
 
     # Camada GeoJSON com todos os lotes
     campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]
