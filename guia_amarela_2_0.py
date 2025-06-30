@@ -197,42 +197,47 @@ elif pagina == "🏗️ Potencial Construtivo":
 # --------------------------------------------------------------------------------------- ÁREA DE OCUPAÇÃO -------------------------------------------------------------------
 
 elif pagina == "📐 Área de Ocupação":
-    st.title("Área de Ocupação do Lote")
-
+    st.title("📐 Área de Ocupação do Lote")
     st.markdown("Visualize o quanto do lote pode ou não ser ocupado, com base na taxa de ocupação e permeabilidade.")
 
-    # Caixa para buscar o lote
+    # Carrega o GeoDataFrame dos lotes (caso ainda não tenha sido carregado)
+    gdf_lotes = gpd.read_file(url_lotes)
+    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+
+    # Caixa de entrada
     ind_fiscal_2 = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para simular a ocupação:")
 
-   
     if ind_fiscal_2:
-        lote_2 = gdf[gdf["INDFISCAL"] == ind_fiscal_2]
+        ind_fiscal_2 = ind_fiscal_2.strip()
+        lote_2 = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_2]
 
         if lote_2.empty:
-            st.warning("Lote não encontrado.")
+            st.warning("⚠️ Lote não encontrado.")
         else:
             geom = lote_2.geometry.values[0]
 
             if geom.is_empty:
-                st.error("Geometria do lote vazia.")
+                st.error("❌ Geometria do lote está vazia.")
             elif geom.geom_type == "MultiPolygon":
                 geom = max(geom.geoms, key=lambda a: a.area)
 
             if geom.geom_type == "Polygon":
                 try:
-                    x, y = list(geom.exterior.coords.xy[0]), list(geom.exterior.coords.xy[1])
+                    x = list(geom.exterior.coords.xy[0])
+                    y = list(geom.exterior.coords.xy[1])
                     area_total = geom.area
 
                     st.markdown(f"**Área total do lote:** {area_total:.2f} m²")
 
-                    # Slider para simular taxa de ocupação
+                    # Slider da taxa de ocupação
                     ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, 100, 50, 5)
                     area_ocupada = area_total * (ocupacao_pct / 100)
 
-                    # Suposição de altura mínima para ilustrar
+                    # Altura simbólica
                     altura = 3
 
-                    # Escala proporcional da base do bloco
+                    # Escala da área ocupada
                     escala = (area_ocupada / area_total) ** 0.5
                     x_centro = sum(x) / len(x)
                     y_centro = sum(y) / len(y)
@@ -244,7 +249,7 @@ elif pagina == "📐 Área de Ocupação":
 
                     fig2 = go.Figure()
 
-                    # Geometria original do lote (base)
+                    # Geometria original (base)
                     fig2.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
                                                 line=dict(color='lightgray', width=3),
                                                 name='Área Total'))
@@ -254,7 +259,7 @@ elif pagina == "📐 Área de Ocupação":
                                                 line=dict(color='green', width=4),
                                                 name=f'Ocupação ({ocupacao_pct}%)'))
 
-                    # Laterais da ocupação
+                    # Laterais
                     for i in range(len(x)):
                         fig2.add_trace(go.Scatter3d(
                             x=[x_scaled[i], x_scaled[i]], y=[y_scaled[i], y_scaled[i]], z=[0, altura],
@@ -267,22 +272,22 @@ elif pagina == "📐 Área de Ocupação":
                             yaxis_title="Y",
                             zaxis_title="Altura (m)"
                         ),
-                        margin=dict(l=0, r=0, b=0, t=30)
+                        margin=dict(l=0, r=0, t=30, b=0)
                     )
 
                     st.plotly_chart(fig2, use_container_width=True)
-                    
-                    # Gráfico de pizza da ocupação
-                    ocupacao_labels = ['Área Ocupada', 'Área Livre']
-                    ocupacao_values = [area_ocupada, area_total - area_ocupada]
-                    ocupacao_colors = ['green', 'lightgray']
+
+                    # Gráfico de pizza
+                    labels = ['Área Ocupada', 'Área Livre']
+                    values = [area_ocupada, area_total - area_ocupada]
+                    colors = ['green', 'lightgray']
 
                     fig_pizza = go.Figure(data=[go.Pie(
-                        labels=ocupacao_labels,
-                        values=ocupacao_values,
-                        marker=dict(colors=ocupacao_colors),
+                        labels=labels,
+                        values=values,
+                        marker=dict(colors=colors),
                         hole=0.4
-                        )])
+                    )])
 
                     fig_pizza.update_layout(
                         title="Distribuição da Ocupação no Lote",
@@ -291,12 +296,14 @@ elif pagina == "📐 Área de Ocupação":
                     )
 
                     st.plotly_chart(fig_pizza, use_container_width=True)
-                    st.markdown(f"**Área ocupada:** {area_ocupada:.2f} m²")
+                    st.markdown(f"**Área ocupada simulada:** {area_ocupada:.2f} m²")
 
                 except Exception as e:
                     st.error(f"Erro ao gerar visualização: {e}")
             else:
-                st.error("Geometria não é um polígono.")
+                st.error("❌ Geometria não é um polígono válido.")
+    else:
+        st.info("ℹ️ Digite uma Indicação Fiscal para simular a ocupação.")
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
