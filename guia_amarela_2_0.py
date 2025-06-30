@@ -122,20 +122,19 @@ if pagina == "🏠 Home":
     """)
     
     # Rodapé informal
-    st.markdown("""
-    <br>
-    <span style='font-size: 12px; color: gray;'>Este Projeto foi desenvolvido como trabalho final da disciplina de Desenvolvimento de Aplicações Geoespaciais da Pós-Graduação em Ciências Geodésicas da UFPR. Discente: Bryan Leonardo Franco Sprenger. Ano: 2025.</span>
-    """, unsafe_allow_html=True)
-   
-    st.markdown("""
-    <br>
-    <span style='font-size: 12px; color: gray;'>Discente: Bryan Leonardo Franco Sprenger. Ano: 2025.</span>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <br>
-    <span style='font-size: 12px; color: gray;'>Ano: 2025.</span>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 30px;">
+            <p style="font-size: 14px; color: #555;">
+            <strong>📚 Este Projeto foi desenvolvido como trabalho final da disciplina de <em>Desenvolvimento de Aplicações Geoespaciais</em><br>
+            da Pós-Graduação em Ciências Geodésicas da UFPR.</strong><br><br>
+            <strong>👨‍🎓 Discente:</strong> Bryan Leonardo Franco Sprenger<br>
+            <strong>📅 Ano:</strong> 2025
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
 
