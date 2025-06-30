@@ -362,11 +362,13 @@ elif pagina == "📊 Indicadores Urbanísticos":
                         if zona_col_name:
                             zona = zona_resultado.iloc[0][zona_col_name]
 
-                            # Normaliza nomes
-                            zona = str(zona).strip().upper().replace(" ", "")
-                            df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper().str.replace(" ", "")
+                            # Normalize as zonas para garantir correspondência correta
+                            zona_lote = zona_lote.strip().upper()
+                            
+                            # E normalize a coluna do CSV
+                            df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper()
 
-                            dados_zona = df_indicadores[df_indicadores['ZONA'] == zona]
+                            zona_info = df_indicadores[df_indicadores['ZONA'] == zona_lote]
 
                             if not dados_zona.empty:
                                 st.success(f"✅ Zona identificada: **{zona}**")
