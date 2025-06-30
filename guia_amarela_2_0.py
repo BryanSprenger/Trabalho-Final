@@ -312,8 +312,8 @@ elif pagina == "📐 Área de Ocupação":
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
-elif pagina == "🏙️ Indicadores Urbanísticos":
-    st.title("🏙️ Indicadores Urbanísticos por Lote")
+elif pagina == "📊 Indicadores Urbanísticos": 
+    st.title("📊 Indicadores Urbanísticos por Lote")
     st.markdown("Insira a indicação fiscal para consultar zoneamento, coeficiente de aproveitamento, usos permitidos e outros dados do lote.")
 
     # URLs dos dados
