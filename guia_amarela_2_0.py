@@ -447,8 +447,8 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                     st.markdown(f"- {uso}")
                             else:
                                 st.info("ℹ️ Nenhum uso permissível especificado.")
-                                            else:
-                                                st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                                    else:
+                                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
                 else:
                     st.warning("⚠️ O lote não intercepta nenhuma zona urbanística.")
     except Exception as e:
