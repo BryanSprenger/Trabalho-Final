@@ -443,7 +443,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
 
-elif pagina == "🗺️ Mapa Interativo":
+elif pagina == "🗺️ Mapa Interativo":  
     st.title("🗺️ Mapa Interativo dos Lotes")
     st.markdown("Digite a **Indicação Fiscal (INDFISCAL)** para localizar e consultar rapidamente os atributos de um lote no mapa interativo da cidade.")
 
