@@ -18,7 +18,7 @@ gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
 gdf_zonas = gpd.read_file(url_zonas_geojson)
 gdf_zonas = gdf_zonas.set_geometry("geometry")  # caso necessário
 
-df_zoneamento_indices = pd.read_csv(url_zonas_indices, sep=",")
+df_zoneamento_indices = pd.read_csv(url_indicadores_csv, sep=",")
 
     
 #Carregando os relatórios de Alvará
