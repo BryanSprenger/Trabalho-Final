@@ -62,7 +62,7 @@ st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", l
 st.sidebar.title("Navegação")
 pagina = st.sidebar.radio(
     "Selecione uma seção:",
-    ("🏠 Home", "🏗️ Potencial Construtivo", "📐 Área de Ocupação", "📊 Indicadores Urbanísticos", "🗺️ Mapa Interativo", "🏘️ Análise Estatística de Emissão de Alvarás")
+    ("🏠 Home", "🏗️ Potencial Construtivo", "📐 Área de Ocupação", "📊 Indicadores Urbanísticos", "🗺️ Mapa Interativo", "🏘️ Análise Estatística de Emissão de Alvarás", "Estudo de Viabilidade")
 )
 
 # ------------------------------------------------------------------------------ HOME -----------------------------------------------------------------------------------------------
