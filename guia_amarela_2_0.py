@@ -439,12 +439,12 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                 st.info("ℹ️ Nenhum uso permissível especificado.")
 
                         if "Usos Permissíveis" in zona_info.columns:
-                        usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
-                        if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
-                            usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
-                            st.markdown("#### ⚠️ Usos Permissíveis")
-                            for uso in usos_permissiveis:
-                                st.markdown(f"- {uso}")
+                            usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
+                            if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
+                                usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
+                                st.markdown("#### ⚠️ Usos Permissíveis")
+                                for uso in usos_permissiveis:
+                                    st.markdown(f"- {uso}")
     else:
         st.info("ℹ️ Nenhum uso permissível especificado.")
                     else:
