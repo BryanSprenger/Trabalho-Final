@@ -331,6 +331,9 @@ elif pagina == "📊 Indicadores Urbanísticos":
     # Normaliza nomes de zonas
     df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper()
 
+
+    st.write("Colunas disponíveis no GeoDataFrame de zonas:", gdf_zonas.columns.tolist())
+
     # Entrada do usuário
     ind_fiscal_zona = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para obter os indicadores urbanísticos:")
 
