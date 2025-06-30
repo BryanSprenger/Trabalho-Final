@@ -320,6 +320,10 @@ elif pagina == "📊 Indicadores Urbanísticos":
         "como coeficientes de aproveitamento, usos permitidos e permissíveis, conforme o zoneamento vigente."
     )
 
+    # URLs dos arquivos
+    url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
+    url_indicadores_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
+    
     try:
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
