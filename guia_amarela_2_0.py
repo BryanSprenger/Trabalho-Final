@@ -326,9 +326,10 @@ elif pagina == "📊 Indicadores Urbanísticos":
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
 
-        # Normaliza colunas
+        # Corrige nomes de colunas e geometria
         df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
         gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
+        gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")  # ⚠️ Corrige a geometria ativa
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
         # Entrada do usuário
@@ -351,7 +352,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                 zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
 
                 if not zona_intersectada.empty:
-                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA']  # Corrigido aqui
+                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA']
                     zona_lote = str(zona_lote).strip().upper()
                     st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
 
