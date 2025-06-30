@@ -346,7 +346,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
 
-        # Padronização
+        # Corrige colunas e geometrias
         df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
         gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
         gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")
@@ -363,6 +363,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                 st.warning("⚠️ Nenhum lote encontrado com essa indicação fiscal.")
             else:
                 geom_lote = lote_selecionado.geometry.values[0]
+
                 if geom_lote.geom_type == "MultiPolygon":
                     geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
@@ -373,7 +374,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                     zona_lote = str(zona_lote).strip().upper()
                     st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
 
-                    zona_info = df_indicadores[df_indicadores['ZONA'] == zona_lote]
+                    zona_info = df_indicadores[df_indicadores['ZONA'].str.upper().str.strip() == zona_lote]
 
                     if not zona_info.empty:
                         st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
@@ -387,37 +388,31 @@ elif pagina == "📊 Indicadores Urbanísticos":
                             "USOS_PERMITIDOS": "Usos Permitidos",
                             "USOS_PERMISSIVEIS": "Usos Permissíveis"
                         }
+
                         zona_info = zona_info.rename(columns=colunas_renomeadas)
 
                         for col in ["CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]:
                             if col in zona_info.columns:
-                                zona_info[col] = zona_info[col].astype(float).round(2)
+                                zona_info[col] = pd.to_numeric(zona_info[col], errors='coerce').round(1)
 
-                        # Calcula área do lote
-                        area_lote = lote_selecionado.geometry.area.iloc[0]
+                        colunas_tabela = ["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]
+                        st.dataframe(zona_info[colunas_tabela], use_container_width=True)
 
-                        ca_basico_m2 = round(area_lote * zona_info["CA Básico"].values[0], 2)
-                        ca_maximo_m2 = round(area_lote * zona_info["CA Máximo"].values[0], 2)
-                        ocupacao_m2 = round(area_lote * zona_info["Taxa de Ocupação (%)"].values[0] / 100, 2)
-                        permeabilidade_m2 = round(area_lote * zona_info["Taxa de Permeabilidade (%)"].values[0] / 100, 2)
+                        # Cálculos com base na área do lote
+                        area_lote = geom_lote.area
+                        st.markdown("### 📐 Cálculo Aplicado ao Lote")
+                        ca_basico = zona_info["CA Básico"].values[0]
+                        ca_maximo = zona_info["CA Máximo"].values[0]
+                        taxa_ocupacao = zona_info["Taxa de Ocupação (%)"].values[0]
+                        taxa_permeavel = zona_info["Taxa de Permeabilidade (%)"].values[0]
 
-                        # Cria DataFrame com valores calculados
-                        linha_m2 = pd.DataFrame({
-                            "Zona": ["(equivalente em m²)"],
-                            "CA Básico": [ca_basico_m2],
-                            "CA Máximo": [ca_maximo_m2],
-                            "Taxa de Ocupação (%)": [ocupacao_m2],
-                            "Taxa de Permeabilidade (%)": [permeabilidade_m2],
-                            "Usos Permitidos": ["—"],
-                            "Usos Permissíveis": ["—"]
-                        })
+                        st.markdown(f"- **Área do Lote:** `{area_lote:.2f} m²`")
+                        st.markdown(f"- **CA Básico (m²):** `{(ca_basico * area_lote):.2f} m²`")
+                        st.markdown(f"- **CA Máximo (m²):** `{(ca_maximo * area_lote):.2f} m²`")
+                        st.markdown(f"- **Área Ocupável Máxima:** `{(taxa_ocupacao / 100 * area_lote):.2f} m²`")
+                        st.markdown(f"- **Área Permeável Mínima:** `{(taxa_permeavel / 100 * area_lote):.2f} m²`")
 
-                        # Junta original + linha m²
-                        tabela_final = pd.concat([zona_info, linha_m2], ignore_index=True)
-
-                        st.dataframe(tabela_final, use_container_width=True)
-
-                        # Lista os usos
+                        # Usos Permitidos
                         if "Usos Permitidos" in zona_info.columns:
                             usos_permitidos_raw = zona_info["Usos Permitidos"].values[0]
                             if isinstance(usos_permitidos_raw, str) and usos_permitidos_raw.strip():
@@ -427,7 +422,8 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                     st.markdown(f"- {uso}")
                             else:
                                 st.info("ℹ️ Nenhum uso permitido especificado.")
-                        
+
+                        # Usos Permissíveis
                         if "Usos Permissíveis" in zona_info.columns:
                             usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
                             if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
@@ -437,8 +433,12 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                     st.markdown(f"- {uso}")
                             else:
                                 st.info("ℹ️ Nenhum uso permissível especificado.")
-                        else:
-                            st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                    else:
+                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                else:
+                    st.warning("⚠️ O lote não intercepta nenhuma zona urbanística.")
+    except Exception as e:
+        st.error(f"Erro ao carregar dados de zoneamento: {e}")
 
 
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
