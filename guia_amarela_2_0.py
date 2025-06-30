@@ -361,7 +361,44 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
                     if not zona_info.empty:
                         st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
-                        st.table(zona_info)
+                        
+                        # Renomeia colunas para ficar mais entendível
+                        colunas_renomeadas = {
+                            "ZONA": "Zona",
+                            "CA_BASICO": "CA Básico",
+                            "CA_MAXIMO": "CA Máximo",
+                            "TAXA_OCUPACAO_MAX": "Taxa de Ocupação (%)",
+                            "TAXA_PERMEABILIDADE_MIN": "Taxa de Permeabilidade (%)",
+                            "USOS_PERMITIDOS": "Usos Permitidos",
+                            "USOS_PERMISSIVEIS": "Usos Permissíveis"
+                        }
+                        
+                        zona_info = zona_info.rename(columns=colunas_renomeadas)
+                        
+                        # Reduz casas decimais nas colunas numéricas
+                        for col in ["CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]:
+                            if col in zona_info.columns:
+                                zona_info[col] = zona_info[col].astype(float).round(1)
+                        
+                        # Exibe tabela com os índices urbanísticos principais
+                        colunas_tabela = ["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]
+                        st.dataframe(zona_info[colunas_tabela], use_container_width=True)
+                        
+                        # Mostra usos permitidos e permissíveis de forma legível
+                        if "Usos Permitidos" in zona_info.columns:
+                            usos_permitidos = zona_info["Usos Permitidos"].values[0].split(";")
+                            usos_permitidos = [uso.strip() for uso in usos_permitidos if uso.strip()]
+                            st.markdown("#### ✅ Usos Permitidos")
+                            for uso in usos_permitidos:
+                                st.markdown(f"- {uso}")
+                        
+                        if "Usos Permissíveis" in zona_info.columns:
+                            usos_permissiveis = zona_info["Usos Permissíveis"].values[0].split(";")
+                            usos_permissiveis = [uso.strip() for uso in usos_permissiveis if uso.strip()]
+                            st.markdown("#### ⚠️ Usos Permissíveis")
+                            for uso in usos_permissiveis:
+                                st.markdown(f"- {uso}")
+                    
                     else:
                         st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
                 else:
