@@ -444,28 +444,77 @@ elif pagina == "📊 Indicadores Urbanísticos":
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
 
 elif pagina == "🗺️ Mapa Interativo":
-    st.title("Mapa Interativo")
+    st.title("🗺️ Mapa Interativo dos Lotes")
+    st.markdown("Digite a **Indicação Fiscal (INDFISCAL)** para localizar e consultar rapidamente os atributos de um lote no mapa interativo da cidade.")
 
-        # --- Criação do Mapa Base Folium ---
+    # Entrada para busca de INDFISCAL
+    ind_fiscal_mapa = st.text_input("🔎 Digite a Indicação Fiscal (INDFISCAL):")
+
+    # Garante que a coluna INDFISCAL seja string
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+
+    # Cria mapa base
     m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
 
-    # Adiciona a camada GeoJSON
-    campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]  
+    # Caso o usuário tenha digitado uma indicação fiscal
+    if ind_fiscal_mapa:
+        ind_fiscal_mapa = str(ind_fiscal_mapa).strip()
+        lote_encontrado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_mapa]
 
-    folium.GeoJson(
-        gdf_lotes,
-        name="Lotes",
-        tooltip=folium.GeoJsonTooltip(
-            fields=campos_seguro,
-            aliases=["Código da Via", "Indicação Fiscal", "Código da Via", "Nome da Via"],
-            sticky=True
-        )
-    ).add_to(m)
+        if not lote_encontrado.empty:
+            geom = lote_encontrado.geometry.values[0]
+            centroid = geom.centroid.coords[0]
 
+            # Reposiciona o mapa no centro do lote
+            m.location = [centroid[1], centroid[0]]
+            m.zoom_start = 18
+
+            # Destaque do lote buscado
+            folium.GeoJson(
+                lote_encontrado,
+                name="Lote Selecionado",
+                style_function=lambda x: {
+                    "fillColor": "#FFEB3B",
+                    "color": "black",
+                    "weight": 3,
+                    "fillOpacity": 0.7
+                },
+                tooltip=folium.GeoJsonTooltip(
+                    fields=["INDFISCAL", "NMVIA", "CDVIA"],
+                    aliases=["Indicação Fiscal", "Nome da Via", "Código da Via"]
+                )
+            ).add_to(m)
+
+            # Exibe os dados do lote
+            st.markdown("### 📋 Informações do Lote Selecionado")
+            campos_tabela = ["INDFISCAL", "NMVIA", "CDVIA", "CDLOTE"]
+            info_lote = lote_encontrado[campos_tabela].reset_index(drop=True)
+            info_lote.columns = ["Indicação Fiscal", "Nome da Via", "Código da Via", "Código do Lote"]
+            st.dataframe(info_lote, use_container_width=True)
+
+        else:
+            st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
+    else:
+        # Caso não tenha filtro, mostra todos os lotes como antes
+        campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]
+        folium.GeoJson(
+            gdf_lotes,
+            name="Todos os Lotes",
+            tooltip=folium.GeoJsonTooltip(
+                fields=campos_seguro,
+                aliases=["Código do Lote", "Indicação Fiscal", "Código da Via", "Nome da Via"],
+                sticky=True
+            )
+        ).add_to(m)
+
+    # Adiciona controles úteis ao mapa
     folium.LayerControl().add_to(m)
+    folium.plugins.Scale().add_to(m)
+    folium.plugins.Fullscreen().add_to(m)
 
-    # --- Renderização do Mapa no Streamlit ---
-    st_data = st_folium(m, width="100%", height=700)
+    # Renderiza o mapa no Streamlit
+    st.markdown("### 🌐 Visualização no Mapa")
+    st_folium(m, width="100%", height=700)
 
 #---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
 
