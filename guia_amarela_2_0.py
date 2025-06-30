@@ -446,31 +446,37 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
 elif pagina == "🗺️ Mapa Interativo":
     st.title("🗺️ Mapa Interativo")
-    st.markdown("Visualize os lotes do município. Utilize a barra de busca para localizar um lote por sua Indicação Fiscal.")
+    st.markdown("Visualize os lotes e consulte informações básicas com base na indicação fiscal (IF).")
 
-    # Entrada para IF
-    ind_fiscal_interativo = st.text_input("🔎 Digite a Indicação Fiscal (INDFISCAL) para localizar no mapa:")
+    # Entrada do usuário para buscar lote
+    ind_fiscal_map = st.text_input("🔎 Digite a Indicação Fiscal para localizar no mapa:")
 
-    # Garantir string e limpar espaços
-    ind_fiscal_interativo = ind_fiscal_interativo.strip()
+    # Garante tipo string
     gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-    # Filtragem do lote (caso haja IF)
-    if ind_fiscal_interativo:
-        lote_busca = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_interativo]
-        if not lote_busca.empty:
-            centro = lote_busca.geometry.iloc[0].centroid
-            m = folium.Map(location=[centro.y, centro.x], zoom_start=18, tiles="CartoDB positron")
-        else:
-            st.warning("⚠️ Lote não encontrado.")
-            m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
-    else:
-        # Mapa inicial padrão
-        m = folium.Map(location=[...], zoom_start=..., tiles="CartoDB positron", control_scale=True)
+    # Se foi digitada uma IF válida, filtra e pega centroide
+    if ind_fiscal_map:
+        ind_fiscal_map = ind_fiscal_map.strip()
+        lote_localizado = gdf_lotes[gdf_lotes['INDFISCAL'] == ind_fiscal_map]
 
-    # Camada GeoJSON com todos os lotes
+        if not lote_localizado.empty:
+            centroid = lote_localizado.geometry.iloc[0].centroid
+            lat, lon = centroid.y, centroid.x
+            zoom = 18
+            st.success(f"Lote localizado. Mapa centralizado na IF: `{ind_fiscal_map}`")
+        else:
+            st.warning("❌ Nenhum lote encontrado com essa Indicação Fiscal.")
+            lat, lon, zoom = -25.42, -49.25, 13
+    else:
+        lat, lon, zoom = -25.42, -49.25, 13
+
+    # Criação do Mapa
+    m = folium.Map(location=[lat, lon], zoom_start=zoom, tiles="CartoDB positron", control_scale=True)
+
+    # Campos seguros para mostrar no tooltip
     campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]
 
+    # Adiciona GeoJSON dos lotes
     folium.GeoJson(
         gdf_lotes,
         name="Lotes",
@@ -478,39 +484,24 @@ elif pagina == "🗺️ Mapa Interativo":
             fields=campos_seguro,
             aliases=["Código do Lote", "Indicação Fiscal", "Código da Via", "Nome da Via"],
             sticky=True
-        ),
-        style_function=lambda x: {"color": "gray", "weight": 1, "fillOpacity": 0.1}
+        )
     ).add_to(m)
 
-    # Destaque do lote buscado (se houver)
-    if ind_fiscal_interativo and not lote_busca.empty:
-        folium.GeoJson(
-            lote_busca,
-            tooltip="Lote Selecionado",
-            style_function=lambda x: {"color": "red", "weight": 2, "fillColor": "red", "fillOpacity": 0.4}
-        ).add_to(m)
-
-    # Plugins extras
-    folium.plugins.Fullscreen().add_to(m)
-    folium.plugins.MousePosition(
-        position='bottomright',
-        separator=' | ',
-        prefix='Coordenadas:',
-        lat_formatter="function(num) {return L.Util.formatNum(num, 6);}",
-        lng_formatter="function(num) {return L.Util.formatNum(num, 6);}"
-    ).add_to(m)
-    folium.plugins.Scale().add_to(m)
     folium.LayerControl().add_to(m)
 
-    # Renderizar mapa no Streamlit
-    st_folium(m, width="100%", height=600)
+    # Exibe o mapa no Streamlit
+    st_data = st_folium(m, width="100%", height=700)
 
-    # Exibir informações do lote (se houver)
-    if ind_fiscal_interativo and not lote_busca.empty:
-        st.markdown("### 🧾 Informações do Lote")
-        lote_info = lote_busca[["INDFISCAL", "CDLOTE", "CDVIA", "NMVIA"]]
-        lote_info.columns = ["Indicação Fiscal", "Código do Lote", "Código da Via", "Nome da Via"]
-        st.dataframe(lote_info, use_container_width=True)
+    # Exibe informações da IF abaixo
+    if ind_fiscal_map and not lote_localizado.empty:
+        st.markdown("### 📋 Informações do Lote")
+        info_lote = lote_localizado[["INDFISCAL", "CDLOTE", "CDVIA", "NMVIA"]].rename(columns={
+            "INDFISCAL": "Indicação Fiscal",
+            "CDLOTE": "Código do Lote",
+            "CDVIA": "Código da Via",
+            "NMVIA": "Nome da Via"
+        })
+        st.dataframe(info_lote.reset_index(drop=True), use_container_width=True)
 
 
 #---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
