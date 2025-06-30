@@ -419,11 +419,24 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
                         # Lista os usos
                         if "Usos Permitidos" in zona_info.columns:
-                            usos_permitidos = zona_info["Usos Permitidos"].values[0].split(";")
-                            usos_permitidos = [uso.strip() for uso in usos_permitidos if uso.strip()]
-                            st.markdown("#### ✅ Usos Permitidos")
-                            for uso in usos_permitidos:
-                                st.markdown(f"- {uso}")
+                            usos_permitidos_raw = zona_info["Usos Permitidos"].values[0]
+                            if isinstance(usos_permitidos_raw, str) and usos_permitidos_raw.strip():
+                                usos_permitidos = [uso.strip() for uso in usos_permitidos_raw.split(";") if uso.strip()]
+                                st.markdown("#### ✅ Usos Permitidos")
+                                for uso in usos_permitidos:
+                                    st.markdown(f"- {uso}")
+                            else:
+                                st.info("ℹ️ Nenhum uso permitido especificado.")
+                        
+                        if "Usos Permissíveis" in zona_info.columns:
+                            usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
+                            if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
+                                usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
+                                st.markdown("#### ⚠️ Usos Permissíveis")
+                                for uso in usos_permissiveis:
+                                    st.markdown(f"- {uso}")
+                            else:
+                                st.info("ℹ️ Nenhum uso permissível especificado.")
 
                         if "Usos Permissíveis" in zona_info.columns:
                             usos_permissiveis = zona_info["Usos Permissíveis"].values[0].split(";")
