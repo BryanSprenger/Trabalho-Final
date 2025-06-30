@@ -200,18 +200,10 @@ elif pagina == "📐 Área de Ocupação":
     st.title("📐 Área de Ocupação do Lote")
     st.markdown("Visualize o quanto do lote pode ou não ser ocupado, com base na taxa de ocupação e permeabilidade.")
 
-    try:
-    gdf_zonas = gpd.read_file(url_zonas_geojson)
-
-    df_indicadores = pd.read_csv(
-        url_indicadores_csv,
-        engine="python",       # Usa o parser mais tolerante
-        quotechar='"',         # Trata textos com vírgulas dentro
-        skipinitialspace=True  # Ignora espaços após delimitadores
-    )
-    except Exception as e:
-        st.error(f"Erro ao carregar dados de zoneamento: {e}")
-        st.stop()
+    # Carrega o GeoDataFrame dos lotes (caso ainda não tenha sido carregado)
+    gdf_lotes = gpd.read_file(url_lotes)
+    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
     # Caixa de entrada
     ind_fiscal_2 = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para simular a ocupação:")
@@ -320,14 +312,16 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
     st.markdown("Insira a Indicação Fiscal para visualizar os parâmetros urbanísticos da zona correspondente.")
 
-    # URLs
-    url_zonas_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
-    url_indicadores_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
-
-    # Carregar os dados
+        # Carregar os dados
     try:
-        gdf_zonas = gpd.read_file(url_zonas_geojson)
-        df_indicadores = pd.read_csv(url_indicadores_csv, sep=";", encoding='utf-8')
+    gdf_zonas = gpd.read_file(url_zonas_geojson)
+
+    df_indicadores = pd.read_csv(
+        url_indicadores_csv,
+        engine="python",       # Usa o parser mais tolerante
+        quotechar='"',         # Trata textos com vírgulas dentro
+        skipinitialspace=True  # Ignora espaços após delimitadores
+    )
     except Exception as e:
         st.error(f"Erro ao carregar dados de zoneamento: {e}")
         st.stop()
