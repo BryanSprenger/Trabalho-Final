@@ -314,14 +314,14 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
         # Carregar os dados
     try:
-    gdf_zonas = gpd.read_file(url_zonas_geojson)
+        gdf_zonas = gpd.read_file(url_zonas_geojson)
 
-    df_indicadores = pd.read_csv(
-        url_indicadores_csv,
-        engine="python",       # Usa o parser mais tolerante
-        quotechar='"',         # Trata textos com vírgulas dentro
-        skipinitialspace=True  # Ignora espaços após delimitadores
-    )
+        df_indicadores = pd.read_csv(
+            url_indicadores_csv,
+            engine="python",       # Usa o parser mais tolerante
+            quotechar='"',         # Trata textos com vírgulas dentro
+            skipinitialspace=True  # Ignora espaços após delimitadores
+        )
     except Exception as e:
         st.error(f"Erro ao carregar dados de zoneamento: {e}")
         st.stop()
