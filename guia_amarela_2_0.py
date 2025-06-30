@@ -643,14 +643,14 @@ elif pagina == "🧮 Estudo de Viabilidade":
     # Entrada do usuário
     indfiscal_input = st.text_input("Digite a Indicação Fiscal (INDFISCAL) do lote para análise:", key="indfiscal_input").strip().upper()
 
-    st.write(lote_para_sugestao[['INDFISCAL', 'ZONA', 'CA_MAX']])
-    
+        
     if st.button("Gerar Sugestão", key="generate_suggestion_button"):
         if indfiscal_input:
             lote_encontrado = gdf_lotes[gdf_lotes['INDFISCAL'] == indfiscal_input]
 
             if not lote_encontrado.empty:
                 lote_para_sugestao = lote_encontrado.iloc[0]
+                st.write(lote_para_sugestao[['INDFISCAL', 'ZONA', 'CA_MAX']])
 
                 try:
                     sugestao_final = fazer_sugestao_para_lote(lote_para_sugestao)
