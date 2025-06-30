@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from folium.plugins import Fullscreen, MeasureControl, MiniMap
+from estudo_viabilidade_app import fazer_sugestao_para_lote
 
 
 #URLs
@@ -635,9 +636,9 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
 
 #---------------------------------------------------------- ESTUDO DE VIABILIDADE --------------------------------------------------------------
-elif pagina == "🧮 Estudo de Viabilidade":
-    st.title("🧮 Estudo de Viabilidade")
-    st.markdown("Faça uma simulação do melhor uso e ocupação para este lote.")
+elif pagina == "🏗️ Estudo de Viabilidade":
+    st.title("🏗️ Estudo de Viabilidade")
+    st.markdown("Faça uma simulação do melhor uso e ocupação para este lote com base nos parâmetros urbanísticos da zona, área do lote e entorno.")
 
     # Entrada do usuário
     indfiscal_input = st.text_input("Digite a Indicação Fiscal (INDFISCAL) do lote para análise:", key="indfiscal_input").strip().upper()
@@ -647,34 +648,33 @@ elif pagina == "🧮 Estudo de Viabilidade":
             lote_encontrado = gdf_lotes[gdf_lotes['INDFISCAL'] == indfiscal_input]
 
             if not lote_encontrado.empty:
-                lote_para_sugestao_original_series = lote_encontrado.iloc[0]
+                lote_para_sugestao = lote_encontrado.iloc[0]
 
                 try:
-                    sugestao_final = fazer_sugestao_para_lote(lote_para_sugestao_original_series)
+                    sugestao_final = fazer_sugestao_para_lote(lote_para_sugestao)
 
-                    st.success(f"Sugestão Detalhada para o Lote INDFISCAL: {lote_para_sugestao_original_series['INDFISCAL']}")
+                    st.success(f"Sugestão Detalhada para o Lote INDFISCAL: {lote_para_sugestao['INDFISCAL']}")
                     st.write(f"**Tipologia Sugerida:** {sugestao_final['tipologia_sugerida']}")
                     st.write(f"**Andares Sugeridos:** {sugestao_final['andares_sugeridos']}")
                     st.write(f"**Área Sugerida:** {sugestao_final['area_sugerida']} m²")
                     st.write(f"**Tipo de Intervenção Sugerida:** {sugestao_final['tipo_intervencao_sugerida']}")
 
                     st.markdown("---")
-                    st.subheader("Dados do Lote (Para Comparação)")
-                    st.write(f"- **Área Total do Lote:** {lote_para_sugestao_original_series['AREA_TOTAL']:.2f} m²")
-                    st.write(f"- **Área Construída Existente:** {lote_para_sugestao_original_series['area_construida_existente']:.2f} m²")
-                    st.write(f"- **CA Real:** {lote_para_sugestao_original_series['CA_REAL']:.2f}")
-                    st.write(f"- **CA Máximo (Zoneamento):** {lote_para_sugestao_original_series['CA_MAX']:.2f}")
-                    st.write(f"- **Taxa Ocupação Máx (Zoneamento):** {lote_para_sugestao_original_series.get('TAXA_OCUPACAO_MAX', 'N/A')}%")
-                    st.write(f"- **Taxa Permeabilidade Mín (Zoneamento):** {lote_para_sugestao_original_series.get('TAXA_PERMEABILIDADE_MIN', 'N/A')}%")
-                    st.write(f"- **Média Área Vizinhos:** {lote_para_sugestao_original_series['MEDIA_AREA_VIZINHOS']:.2f} m²")
-                    st.write(f"- **Zona:** {lote_para_sugestao_original_series.get('ZONA', 'N/A')}")
-                    st.write(f"- **Usos Permitidos na Zona (Completo):** {lote_para_sugestao_original_series.get('USOS_PERMITIDOS_ZONA_STRING', 'N/A')}")
+                    st.subheader("📋 Dados do Lote para Comparação")
+                    st.write(f"- **Área Total do Lote:** {lote_para_sugestao['AREA_TOTAL']:.2f} m²")
+                    st.write(f"- **Área Construída Existente:** {lote_para_sugestao['area_construida_existente']:.2f} m²")
+                    st.write(f"- **CA Real:** {lote_para_sugestao['CA_REAL']:.2f}")
+                    st.write(f"- **CA Máximo (Zoneamento):** {lote_para_sugestao['CA_MAX']:.2f}")
+                    st.write(f"- **Taxa Ocupação Máx:** {lote_para_sugestao.get('TAXA_OCUPACAO_MAX', 'N/A')}%")
+                    st.write(f"- **Taxa Permeabilidade Mín:** {lote_para_sugestao.get('TAXA_PERMEABILIDADE_MIN', 'N/A')}%")
+                    st.write(f"- **Média Área Vizinhos:** {lote_para_sugestao['MEDIA_AREA_VIZINHOS']:.2f} m²")
+                    st.write(f"- **Zona:** {lote_para_sugestao.get('ZONA', 'N/A')}")
+                    st.write(f"- **Usos Permitidos na Zona:** {lote_para_sugestao.get('USOS_PERMITIDOS_ZONA_STRING', 'N/A')}")
 
                 except Exception as e:
-                    st.error(f"Erro ao gerar sugestão para a Indicação Fiscal {indfiscal_input}: {e}")
-                    st.warning("Por favor, verifique se todos os dados necessários para o cálculo estão presentes para este lote.")
+                    st.error(f"Erro ao gerar sugestão para a Indicação Fiscal '{indfiscal_input}': {e}")
+                    st.warning("Verifique se os dados necessários estão disponíveis para esse lote.")
             else:
-                st.warning(f"Indicação Fiscal '{indfiscal_input}' não encontrada no banco de dados de lotes.")
-                st.info("Certifique-se de que a Indicação Fiscal está correta e existe no GeoJSON de Lotes.")
+                st.warning(f"Indicação Fiscal '{indfiscal_input}' não encontrada nos dados.")
         else:
-            st.info("Por favor, digite uma Indicação Fiscal para começar.")
+            st.info("Digite uma Indicação Fiscal válida para realizar a análise.")
