@@ -312,75 +312,61 @@ elif pagina == "📐 Área de Ocupação":
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
-elif pagina == "📊 Indicadores Urbanísticos": 
-    st.title("📊 Indicadores Urbanísticos por Lote")
-    st.markdown("Insira a indicação fiscal para consultar zoneamento, coeficiente de aproveitamento, usos permitidos e outros dados do lote.")
+elif pagina == "📊 Indicadores Urbanísticos":
+    st.title("📊 Indicadores Urbanísticos do Lote")
+    st.markdown("Insira a Indicação Fiscal para consultar os índices urbanísticos aplicáveis ao lote, como coeficiente de aproveitamento, usos permitidos e permissíveis.")
 
     # URLs dos dados
+    url_zoneamento_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
-    url_indicadores_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
 
-    # Leitura dos dados
     try:
+        # Carrega os dados de zoneamento
+        df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
-        df_indicadores = pd.read_csv(url_indicadores_csv, sep=',')  # Usa vírgula como separador
+        gdf_lotes = gpd.read_file(url_lotes)
+
+        # Normaliza colunas
+        df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
+        gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
+        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+
+        # Entrada do usuário
+        indfiscal_zona = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
+
+        if indfiscal_zona:
+            indfiscal_zona = str(indfiscal_zona).strip()
+            lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == indfiscal_zona]
+
+            if lote_selecionado.empty:
+                st.warning("⚠️ Nenhum lote encontrado com essa indicação fiscal.")
+            else:
+                geom_lote = lote_selecionado.geometry.values[0]
+
+                # Garante polígono simples
+                if geom_lote.geom_type == "MultiPolygon":
+                    geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
+
+                # Verifica interseção com zonas
+                zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
+
+                if not zona_intersectada.empty:
+                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA']  # Corrigido aqui
+                    zona_lote = str(zona_lote).strip().upper()
+                    st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
+
+                    # Filtra na tabela de indicadores
+                    zona_info = df_indicadores[df_indicadores['ZONA'] == zona_lote]
+
+                    if not zona_info.empty:
+                        st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
+                        st.table(zona_info)
+                    else:
+                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                else:
+                    st.warning("⚠️ O lote não intercepta nenhuma zona urbanística.")
     except Exception as e:
         st.error(f"Erro ao carregar dados de zoneamento: {e}")
-        st.stop()
-
-    # Normaliza nomes de zonas
-    df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper()
-
-
-    st.write("Colunas disponíveis no GeoDataFrame de zonas:", gdf_zonas.columns.tolist())
-
-    # Entrada do usuário
-    ind_fiscal_zona = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para obter os indicadores urbanísticos:")
-
-    if ind_fiscal_zona:
-        ind_fiscal_zona = str(ind_fiscal_zona).strip()
-
-        if ind_fiscal_zona in gdf_lotes['INDFISCAL'].astype(str).values:
-            # Filtra o lote correspondente
-            lote_especifico = gdf_lotes[gdf_lotes['INDFISCAL'].astype(str) == ind_fiscal_zona]
-
-            if not lote_especifico.empty:
-                geom_lote = lote_especifico.geometry.values[0]
-
-                if geom_lote.is_empty:
-                    st.warning("A geometria do lote está vazia.")
-                else:
-                    # Interseção com zona urbanística
-                    zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
-
-                    if not zona_intersectada.empty:
-                        zona_lote = zona_intersectada.iloc[0]['ZONA']
-                        zona_lote = str(zona_lote).strip().upper()
-
-                        st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
-
-                        zona_info = df_indicadores[df_indicadores['ZONA'] == zona_lote]
-
-                        if not zona_info.empty:
-                            st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
-
-                            st.table(zona_info)
-
-                            # Dados resumidos
-                            usos = zona_info.iloc[0]['USOS_PERMITIDOS']
-                            ca_basico = zona_info.iloc[0]['CA_BASICO']
-                            ca_maximo = zona_info.iloc[0]['CA_MAXIMO']
-
-                            st.markdown(f"**Coeficiente Básico:** `{ca_basico}`")
-                            st.markdown(f"**Coeficiente Máximo:** `{ca_maximo}`")
-                            st.markdown(f"**Usos Permitidos:** {usos}")
-                        else:
-                            st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
-                    else:
-                        st.warning("⚠️ O lote não intercepta nenhuma zona urbanística definida.")
-        else:
-            st.error("❌ Indicação Fiscal não encontrada na base de lotes.")
-
 
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
 
