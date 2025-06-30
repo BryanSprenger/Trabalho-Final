@@ -331,16 +331,12 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
     try:
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
-        df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
+        df_indicadores = pd.read_csv(url_indicadores_csv, sep=",")
     except Exception as e:
         st.error(f"Erro ao carregar dados de zoneamento: {e}")
         st.stop()
 
-    
-
-    # Normaliza o CRS
-    gdf_lotes = gdf_lotes.to_crs("EPSG:4326")
-    gdf_zonas = gdf_zonas.to_crs("EPSG:4326")
+   
 
     # Entrada do usuário
     ind_fiscal_input = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
