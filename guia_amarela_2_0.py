@@ -113,17 +113,18 @@ if pagina == "🏠 Home":
     st.markdown("""
     ### 🛠️ Funcionalidades já implementadas
     
-    - 📍 **Visualização geográfica** dos lotes com base na Indicação Fiscal.
-    - 🧱 **Cálculo e visualização do Potencial Construtivo**, com gráfico 3D interativo.
-    - 🧮 **Simulação da Taxa de Ocupação** e área livre construída.
-    - 📊 **Análise estatística da emissão de alvarás** por ano e tipologia.
+    - 🗺️ **Visualização geográfica** dos lotes com base na Indicação Fiscal.
+    - 🏗️ **Cálculo e visualização do Potencial Construtivo**, com gráfico 3D interativo.
+    - 📐 **Simulação da Taxa de Ocupação** e área livre construída.
+    - 📊 **Indicadores Urbanisticos** com base no zoneamento do lote 
+    - 🏘️ **Análise estatística da emissão de alvarás** por ano e tipologia.
     
     """)
     
     # Rodapé informal
     st.markdown("""
     <br>
-    <span style='font-size: 12px; color: gray;'>Desenvolvido como trabalho final da disciplina de Desenvolvimento de Aplicações em Ciências Geodésicas.</span>
+    <span style='font-size: 12px; color: gray;'>Este Projeto foi desenvolvido como trabalho final da disciplina de Desenvolvimento de Aplicações Geoespaciais da Pós-Graduação em Ciências Geodésicas da UFPR. Discente: Bryan Leonardo Franco Sprenger. Ano: 2025.</span>
     """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
