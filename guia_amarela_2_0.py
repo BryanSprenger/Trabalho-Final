@@ -124,80 +124,86 @@ if pagina == "🏠 Home":
 # ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
 
 elif pagina == "🏗️ Potencial Construtivo":
-    st.title("🏗️ Potencial Construtivo")
+    st.title("🏗️ Potencial Construtivo do Lote")
     st.markdown("Visualize aqui o volume máximo permitido pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
-    # Carrega o arquivo GeoJSON
-    gdf_lotes = gpd.read_file(url_lotes)
-    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
-    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
-
-    # Entrada de Indicação Fiscal
+    # Entrada da INDFISCAL
     ind_fiscal = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
 
     if ind_fiscal:
-        ind_fiscal = ind_fiscal.strip()
-        lote_filtrado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
+        gdf_lotes["INDFISCAL"] = gdf_lotes["INDFISCAL"].astype(str)
+        ind_fiscal = str(ind_fiscal).strip()
 
-        if lote_filtrado.empty:
+        lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
+
+        if lote_selecionado.empty:
             st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
         else:
-            # Cálculo da área
-            area_m2 = lote_filtrado.geometry.area.iloc[0]
+            # Exibir área do lote
+            area_m2 = lote_selecionado.geometry.area.iloc[0]
             st.success(f"✅ Área do lote: **{area_m2:.2f} m²**")
 
-            # Geometria do lote
-            lote_geom = lote_filtrado.geometry.values[0]
+            geom_lote = lote_selecionado.geometry.values[0]
 
-            if lote_geom.is_empty:
-                st.error("❌ A geometria do lote está vazia.")
-            elif lote_geom.geom_type == "MultiPolygon":
-                lote_geom = max(lote_geom.geoms, key=lambda a: a.area)
+            if geom_lote.is_empty:
+                st.error("A geometria do lote está vazia.")
+            elif geom_lote.geom_type == "MultiPolygon":
+                geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
-            if lote_geom.geom_type == "Polygon":
-                try:
-                    x = list(lote_geom.exterior.coords.xy[0])
-                    y = list(lote_geom.exterior.coords.xy[1])
-                    z_base = [0] * len(x)
+            # Interseção com zona
+            try:
+                zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom_lote)]
 
-                    ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
-                    altura = (ca * area_m2) / (area_m2 ** 0.5)
-                    z_top = [altura] * len(x)
+                if not zona_intersectada.empty:
+                    zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
 
-                    fig = go.Figure()
+                    # Busca o CA correspondente
+                    zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
 
-                    # Base
-                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
-                                               line=dict(color='blue', width=4), name='Base'))
+                    if not zona_match.empty:
+                        ca_max = float(zona_match["CA_MAXIMO"].values[0])
+                        st.info(f"🏙️ Zona: **{zona_nome}** — CA Máximo: **{ca_max}**")
 
-                    # Topo
-                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
-                                               line=dict(color='lightblue', width=4), name='Topo'))
+                        # Slider de simulação
+                        ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.1, ca_max, min(1.0, ca_max), 0.1)
 
-                    # Laterais
-                    for i in range(len(x)):
-                        fig.add_trace(go.Scatter3d(
-                            x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
-                            mode='lines', line=dict(color='lightblue', width=2), showlegend=False
-                        ))
+                        altura = (ca * area_m2) / (area_m2 ** 0.5)
 
-                    fig.update_layout(
-                        scene=dict(
-                            xaxis_title='X',
-                            yaxis_title='Y',
-                            zaxis_title='Altura (m)'
-                        ),
-                        margin=dict(l=0, r=0, b=0, t=30)
-                    )
+                        x, y = list(geom_lote.exterior.coords.xy[0]), list(geom_lote.exterior.coords.xy[1])
+                        z_base = [0] * len(x)
+                        z_top = [altura] * len(x)
 
-                    st.plotly_chart(fig, use_container_width=True)
+                        fig = go.Figure()
 
-                except Exception as e:
-                    st.error(f"❌ Erro ao gerar visualização 3D: {e}")
-            else:
-                st.error("❌ A geometria selecionada não é um polígono válido.")
+                        # Base
+                        fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
+                                                   line=dict(color='blue', width=4), name='Base'))
+
+                        # Topo
+                        fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
+                                                   line=dict(color='lightblue', width=4), name='Topo'))
+
+                        # Laterais
+                        for i in range(len(x)):
+                            fig.add_trace(go.Scatter3d(
+                                x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
+                                mode='lines', line=dict(color='lightblue', width=2), showlegend=False
+                            ))
+
+                        fig.update_layout(
+                            scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
+                            margin=dict(l=0, r=0, b=0, t=30)
+                        )
+
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de índices.")
+                else:
+                    st.warning("⚠️ A zona correspondente ao lote não foi identificada no mapa.")
+            except Exception as e:
+                st.error(f"Erro ao processar zona e CA: {e}")
     else:
-        st.info("ℹ️ Insira a Indicação Fiscal para visualizar o lote.")
+        st.info("Digite uma Indicação Fiscal para iniciar.")
 
 # --------------------------------------------------------------------------------------- ÁREA DE OCUPAÇÃO -------------------------------------------------------------------
 
