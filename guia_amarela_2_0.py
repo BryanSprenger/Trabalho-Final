@@ -132,6 +132,12 @@ elif pagina == "🏗️ Potencial Construtivo":
     # Verifica se foi digitado algo
     if ind_fiscal:
         lote_filtrado = gdf[gdf["INDFISCAL"] == ind_fiscal]
+        
+        # Exibir a área do lote
+           ind_fiscal:
+                # Converte coluna e input para string
+                gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+                ind_fiscal = str(ind_fiscal).strip()
 
         if lote_filtrado.empty:
             st.warning("Nenhum lote encontrado com essa indicação fiscal.")
@@ -193,11 +199,7 @@ elif pagina == "🏗️ Potencial Construtivo":
             else:
                 st.error("A geometria selecionada não é um polígono válido.")
 
-    # Exibir a área do lote
-    if ind_fiscal:
-        # Converte coluna e input para string
-        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
-        ind_fiscal = str(ind_fiscal).strip()
+    
         
     else:
         st.info("Insira a Indicação Fiscal para visualizar o lote.")
