@@ -320,71 +320,72 @@ elif pagina == "📊 Indicadores Urbanísticos":
         "como coeficientes de aproveitamento, usos permitidos e permissíveis, conforme o zoneamento vigente."
     )
 
-       try:
-            gdf_zonas = gpd.read_file(url_zoneamento_geojson)
-            df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
-        except Exception as e:
-            st.error(f"Erro ao carregar dados de zoneamento: {e}")
-            st.stop()
-    
-        # Normaliza o CRS
-        gdf_lotes = gdf_lotes.to_crs("EPSG:4326")
-        gdf_zonas = gdf_zonas.to_crs("EPSG:4326")
-    
-        # Entrada do usuário
-        ind_fiscal_input = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
-    
-        if ind_fiscal_input:
-            ind_fiscal_input = ind_fiscal_input.strip()
-    
-            lote_sel = gdf_lotes[gdf_lotes["INDFISCAL"].astype(str) == ind_fiscal_input]
-    
-            if not lote_sel.empty:
-                geom_lote = lote_sel.geometry.iloc[0]
-    
-                if geom_lote.is_empty:
-                    st.error("A geometria do lote está vazia.")
-                else:
-                    try:
-                        zona_resultado = gpd.overlay(lote_sel, gdf_zonas, how='intersection')
-    
-                        if not zona_resultado.empty:
-                            # A coluna pode se chamar 'ZONA', 'NOME', etc — verifique!
-                            zona_col_name = next((col for col in zona_resultado.columns if 'ZONA' in col.upper()), None)
-    
-                            if zona_col_name:
-                                zona = zona_resultado.iloc[0][zona_col_name]
-    
-                                # Normaliza nomes
-                                zona = str(zona).strip().upper().replace(" ", "")
-                                df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper().str.replace(" ", "")
-    
-                                dados_zona = df_indicadores[df_indicadores['ZONA'] == zona]
-    
-                                if not dados_zona.empty:
-                                    st.success(f"✅ Zona identificada: **{zona}**")
-                                    st.markdown("### 🧾 Parâmetros Urbanísticos")
-                                    st.dataframe(
-                                        dados_zona.rename(columns={
-                                            "ZONA": "Zona",
-                                            "CA_BASICO": "Coef. Básico",
-                                            "CA_MAXIMO": "Coef. Máximo",
-                                            "USOS_PERMITIDOS": "Usos Permitidos",
-                                            "USOS_PERMISSIVEIS": "Usos Permissíveis"
-                                        })
-                                    )
-                                else:
-                                    st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
-                            else:
-                                st.error("❌ Nenhuma coluna 'ZONA' identificada no arquivo de zoneamento.")
-                        else:
-                            st.warning("⚠️ A zona correspondente ao lote não foi identificada no GeoJSON.")
-                    except Exception as e:
-                        st.error(f"Erro ao cruzar lote com zoneamento: {e}")
+     try:
+        gdf_zonas = gpd.read_file(url_zoneamento_geojson)
+        df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
+    except Exception as e:
+        st.error(f"Erro ao carregar dados de zoneamento: {e}")
+        st.stop()
+
+    # Normaliza o CRS
+    gdf_lotes = gdf_lotes.to_crs("EPSG:4326")
+    gdf_zonas = gdf_zonas.to_crs("EPSG:4326")
+
+    # Entrada do usuário
+    ind_fiscal_input = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
+
+    if ind_fiscal_input:
+        ind_fiscal_input = ind_fiscal_input.strip()
+
+        lote_sel = gdf_lotes[gdf_lotes["INDFISCAL"].astype(str) == ind_fiscal_input]
+
+        if not lote_sel.empty:
+            geom_lote = lote_sel.geometry.iloc[0]
+
+            if geom_lote.is_empty:
+                st.error("A geometria do lote está vazia.")
             else:
-                st.warning("⚠️ Lote não encontrado com essa Indicação Fiscal.")
+                try:
+                    zona_resultado = gpd.overlay(lote_sel, gdf_zonas, how='intersection')
+
+                    if not zona_resultado.empty:
+                        # A coluna pode se chamar 'ZONA', 'NOME', etc — verifique!
+                        zona_col_name = next((col for col in zona_resultado.columns if 'ZONA' in col.upper()), None)
+
+                        if zona_col_name:
+                            zona = zona_resultado.iloc[0][zona_col_name]
+
+                            # Normaliza nomes
+                            zona = str(zona).strip().upper().replace(" ", "")
+                            df_indicadores['ZONA'] = df_indicadores['ZONA'].astype(str).str.strip().str.upper().str.replace(" ", "")
+
+                            dados_zona = df_indicadores[df_indicadores['ZONA'] == zona]
+
+                            if not dados_zona.empty:
+                                st.success(f"✅ Zona identificada: **{zona}**")
+                                st.markdown("### 🧾 Parâmetros Urbanísticos")
+                                st.dataframe(
+                                    dados_zona.rename(columns={
+                                        "ZONA": "Zona",
+                                        "CA_BASICO": "Coef. Básico",
+                                        "CA_MAXIMO": "Coef. Máximo",
+                                        "USOS_PERMITIDOS": "Usos Permitidos",
+                                        "USOS_PERMISSIVEIS": "Usos Permissíveis"
+                                    })
+                                )
+                            else:
+                                st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                        else:
+                            st.error("❌ Nenhuma coluna 'ZONA' identificada no arquivo de zoneamento.")
+                    else:
+                        st.warning("⚠️ A zona correspondente ao lote não foi identificada no GeoJSON.")
+                except Exception as e:
+                    st.error(f"Erro ao cruzar lote com zoneamento: {e}")
         else:
-            st.info("ℹ️ Digite a Indicação Fiscal do lote para iniciar.")
+            st.warning("⚠️ Lote não encontrado com essa Indicação Fiscal.")
+    else:
+        st.info("ℹ️ Digite a Indicação Fiscal do lote para iniciar.")
+
 
 
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
