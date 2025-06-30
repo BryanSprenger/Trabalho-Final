@@ -138,6 +138,22 @@ elif pagina == "🏗️ Potencial Construtivo":
         else:
             lote_geom = lote_filtrado.geometry.values[0]
 
+   # Exibir a área do lote
+    if ind_fiscal_input:
+        # Converte coluna e input para string
+        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+        ind_fiscal_input = str(ind_fiscal_input).strip()
+    
+        # Filtra lote
+        lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_input]
+    
+        if not lote_selecionado.empty:
+            area_m2 = lote_selecionado.geometry.area.iloc[0]
+            st.success(f"✅ Área do lote: **{area_m2:.2f} m²**")
+        else:
+            st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
+            
+            
             # Garantir que seja um Polygon simples
             if lote_geom.is_empty:
                 st.error("A geometria do lote está vazia.")
