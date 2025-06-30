@@ -341,15 +341,15 @@ elif pagina == "📊 Indicadores Urbanísticos":
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
 
     try:
-        # Carrega os dados de zoneamento
+        # Carrega os dados
         df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
 
-        # Corrige nomes de colunas e geometria
+        # Padronização
         df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
         gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
-        gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")  # ⚠️ Corrige a geometria ativa
+        gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
         # Entrada do usuário
@@ -363,12 +363,9 @@ elif pagina == "📊 Indicadores Urbanísticos":
                 st.warning("⚠️ Nenhum lote encontrado com essa indicação fiscal.")
             else:
                 geom_lote = lote_selecionado.geometry.values[0]
-
-                # Garante polígono simples
                 if geom_lote.geom_type == "MultiPolygon":
                     geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
-                # Verifica interseção com zonas
                 zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
 
                 if not zona_intersectada.empty:
@@ -376,13 +373,11 @@ elif pagina == "📊 Indicadores Urbanísticos":
                     zona_lote = str(zona_lote).strip().upper()
                     st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
 
-                    # Filtra na tabela de indicadores
                     zona_info = df_indicadores[df_indicadores['ZONA'] == zona_lote]
 
                     if not zona_info.empty:
                         st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
-                        
-                        # Renomeia colunas para ficar mais entendível
+
                         colunas_renomeadas = {
                             "ZONA": "Zona",
                             "CA_BASICO": "CA Básico",
@@ -392,33 +387,50 @@ elif pagina == "📊 Indicadores Urbanísticos":
                             "USOS_PERMITIDOS": "Usos Permitidos",
                             "USOS_PERMISSIVEIS": "Usos Permissíveis"
                         }
-                        
                         zona_info = zona_info.rename(columns=colunas_renomeadas)
-                        
-                        # Reduz casas decimais nas colunas numéricas
+
                         for col in ["CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]:
                             if col in zona_info.columns:
-                                zona_info[col] = zona_info[col].astype(float).round(1)
-                        
-                        # Exibe tabela com os índices urbanísticos principais
-                        colunas_tabela = ["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]
-                        st.dataframe(zona_info[colunas_tabela], use_container_width=True)
-                        
-                        # Mostra usos permitidos e permissíveis de forma legível
+                                zona_info[col] = zona_info[col].astype(float).round(2)
+
+                        # Calcula área do lote
+                        area_lote = lote_selecionado.geometry.area.iloc[0]
+
+                        ca_basico_m2 = round(area_lote * zona_info["CA Básico"].values[0], 2)
+                        ca_maximo_m2 = round(area_lote * zona_info["CA Máximo"].values[0], 2)
+                        ocupacao_m2 = round(area_lote * zona_info["Taxa de Ocupação (%)"].values[0] / 100, 2)
+                        permeabilidade_m2 = round(area_lote * zona_info["Taxa de Permeabilidade (%)"].values[0] / 100, 2)
+
+                        # Cria DataFrame com valores calculados
+                        linha_m2 = pd.DataFrame({
+                            "Zona": ["(equivalente em m²)"],
+                            "CA Básico": [ca_basico_m2],
+                            "CA Máximo": [ca_maximo_m2],
+                            "Taxa de Ocupação (%)": [ocupacao_m2],
+                            "Taxa de Permeabilidade (%)": [permeabilidade_m2],
+                            "Usos Permitidos": ["—"],
+                            "Usos Permissíveis": ["—"]
+                        })
+
+                        # Junta original + linha m²
+                        tabela_final = pd.concat([zona_info, linha_m2], ignore_index=True)
+
+                        st.dataframe(tabela_final, use_container_width=True)
+
+                        # Lista os usos
                         if "Usos Permitidos" in zona_info.columns:
                             usos_permitidos = zona_info["Usos Permitidos"].values[0].split(";")
                             usos_permitidos = [uso.strip() for uso in usos_permitidos if uso.strip()]
                             st.markdown("#### ✅ Usos Permitidos")
                             for uso in usos_permitidos:
                                 st.markdown(f"- {uso}")
-                        
+
                         if "Usos Permissíveis" in zona_info.columns:
                             usos_permissiveis = zona_info["Usos Permissíveis"].values[0].split(";")
                             usos_permissiveis = [uso.strip() for uso in usos_permissiveis if uso.strip()]
                             st.markdown("#### ⚠️ Usos Permissíveis")
                             for uso in usos_permissiveis:
                                 st.markdown(f"- {uso}")
-                    
                     else:
                         st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
                 else:
