@@ -320,7 +320,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
         "como coeficientes de aproveitamento, usos permitidos e permissíveis, conforme o zoneamento vigente."
     )
 
-     try:
+    try:
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         df_indicadores = pd.read_csv(url_indicadores_csv, sep=";")
     except Exception as e:
