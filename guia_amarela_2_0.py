@@ -130,6 +130,11 @@ elif pagina == "🏗️ Potencial Construtivo":
     # Entrada da INDFISCAL
     ind_fiscal = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
 
+    # Leitura dos dados
+    gdf_zonas = gpd.read_file(url_zonas_geojson)
+    gdf_zonas = gdf_zonas.set_geometry("geometry")  
+
+    df_zoneamento_indices = pd.read_csv(url_zonas_indices, sep=",")
     if ind_fiscal:
         gdf_lotes["INDFISCAL"] = gdf_lotes["INDFISCAL"].astype(str)
         ind_fiscal = str(ind_fiscal).strip()
