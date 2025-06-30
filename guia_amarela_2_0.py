@@ -119,68 +119,57 @@ if pagina == "🏠 Home":
 # ---------------------------------------------------------------------------- POTENCIAL CONSTRUTIVO ------------------------------------------------------------------------------------
 
 elif pagina == "🏗️ Potencial Construtivo":
-    st.title("Potencial Construtivo")
+    st.title("🏗️ Potencial Construtivo")
+    st.markdown("Visualize aqui o volume máximo permitido pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
-    st.markdown("Visualize aqui o volume máximo permitidos pelo coeficiente de aproveitamento, altura e recuos mínimos.")
+    # Carrega o arquivo GeoJSON
+    gdf_lotes = gpd.read_file(url_lotes)
+    gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-    # Carrega o arquivo GeoJSON localmente
-    gdf = gpd.read_file(url_lotes)
-
-    # Caixa de entrada para Indicação Fiscal
+    # Entrada de Indicação Fiscal
     ind_fiscal = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
 
-    # Verifica se foi digitado algo
     if ind_fiscal:
-        lote_filtrado = gdf[gdf["INDFISCAL"] == ind_fiscal]
-        
-        # Exibir a área do lote
-           ind_fiscal:
-                # Converte coluna e input para string
-                gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
-                ind_fiscal = str(ind_fiscal).strip()
+        ind_fiscal = ind_fiscal.strip()
+        lote_filtrado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
 
         if lote_filtrado.empty:
-            st.warning("Nenhum lote encontrado com essa indicação fiscal.")
+            st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
         else:
+            # Cálculo da área
+            area_m2 = lote_filtrado.geometry.area.iloc[0]
+            st.success(f"✅ Área do lote: **{area_m2:.2f} m²**")
+
+            # Geometria do lote
             lote_geom = lote_filtrado.geometry.values[0]
 
-        # Filtra lote
-        lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
-    
-        if not lote_selecionado.empty:
-            area_m2 = lote_selecionado.geometry.area.iloc[0]
-            st.success(f"✅ Área do lote: **{area_m2:.2f} m²**")
-        else:
-            st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
-            
-            
-            # Garantir que seja um Polygon simples
             if lote_geom.is_empty:
-                st.error("A geometria do lote está vazia.")
+                st.error("❌ A geometria do lote está vazia.")
             elif lote_geom.geom_type == "MultiPolygon":
-                # Pega o maior polígono do MultiPolygon
                 lote_geom = max(lote_geom.geoms, key=lambda a: a.area)
 
             if lote_geom.geom_type == "Polygon":
                 try:
-                    x, y = list(lote_geom.exterior.coords.xy[0]), list(lote_geom.exterior.coords.xy[1])
-                    area = lote_geom.area
-                    ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
-                    altura = (ca * area) / (area**0.5)
+                    x = list(lote_geom.exterior.coords.xy[0])
+                    y = list(lote_geom.exterior.coords.xy[1])
                     z_base = [0] * len(x)
+
+                    ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.5, 4.0, 2.0, 0.1)
+                    altura = (ca * area_m2) / (area_m2 ** 0.5)
                     z_top = [altura] * len(x)
 
                     fig = go.Figure()
 
-                    # base
+                    # Base
                     fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
                                                line=dict(color='blue', width=4), name='Base'))
 
-                    # topo
+                    # Topo
                     fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
                                                line=dict(color='lightblue', width=4), name='Topo'))
 
-                    # laterais
+                    # Laterais
                     for i in range(len(x)):
                         fig.add_trace(go.Scatter3d(
                             x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
@@ -188,22 +177,22 @@ elif pagina == "🏗️ Potencial Construtivo":
                         ))
 
                     fig.update_layout(
-                        scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
+                        scene=dict(
+                            xaxis_title='X',
+                            yaxis_title='Y',
+                            zaxis_title='Altura (m)'
+                        ),
                         margin=dict(l=0, r=0, b=0, t=30)
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
 
                 except Exception as e:
-                    st.error(f"Erro ao gerar visualização 3D: {e}")
+                    st.error(f"❌ Erro ao gerar visualização 3D: {e}")
             else:
-                st.error("A geometria selecionada não é um polígono válido.")
-
-    
-        
+                st.error("❌ A geometria selecionada não é um polígono válido.")
     else:
-        st.info("Insira a Indicação Fiscal para visualizar o lote.")
-
+        st.info("ℹ️ Insira a Indicação Fiscal para visualizar o lote.")
 
 # --------------------------------------------------------------------------------------- ÁREA DE OCUPAÇÃO -------------------------------------------------------------------
 
