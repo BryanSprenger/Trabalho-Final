@@ -636,8 +636,8 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
 
 #---------------------------------------------------------- ESTUDO DE VIABILIDADE --------------------------------------------------------------
-elif pagina == "🏗️ Estudo de Viabilidade":
-    st.title("🏗️ Estudo de Viabilidade")
+elif pagina == "🧮 Estudo de Viabilidade":
+    st.title("🧮 Estudo de Viabilidade")
     st.markdown("Faça uma simulação do melhor uso e ocupação para este lote com base nos parâmetros urbanísticos da zona, área do lote e entorno.")
 
     # Entrada do usuário
