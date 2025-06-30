@@ -446,66 +446,72 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
 elif pagina == "🗺️ Mapa Interativo":
     st.title("🗺️ Mapa Interativo")
+    st.markdown("Visualize os lotes do município. Utilize a barra de busca para localizar um lote por sua Indicação Fiscal.")
 
-    # Entrada para buscar por Indicação Fiscal
-    ind_fiscal_interativo = st.text_input("Digite a Indicação Fiscal (INDFISCAL) para localizar o lote:")
+    # Entrada para IF
+    ind_fiscal_interativo = st.text_input("🔎 Digite a Indicação Fiscal (INDFISCAL) para localizar no mapa:")
 
-    # Criação do Mapa Base
-    m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
+    # Garantir string e limpar espaços
+    ind_fiscal_interativo = ind_fiscal_interativo.strip()
+    gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
-    # Filtra o lote, se o usuário digitou
+    # Filtragem do lote (caso haja IF)
     if ind_fiscal_interativo:
         lote_busca = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_interativo]
         if not lote_busca.empty:
-            # Centraliza o mapa no lote
-            centroid = lote_busca.geometry.iloc[0].centroid
-            m.location = [centroid.y, centroid.x]
-            folium.GeoJson(
-                lote_busca,
-                name="Lote Selecionado",
-                tooltip=folium.GeoJsonTooltip(
-                    fields=["INDFISCAL", "NMVIA"],
-                    aliases=["Indicação Fiscal", "Nome da Via"],
-                    sticky=True
-                ),
-                style_function=lambda x: {
-                    "fillColor": "#ffcc00",
-                    "color": "black",
-                    "weight": 3,
-                    "fillOpacity": 0.7
-                }
-            ).add_to(m)
-
-            st.markdown("### 📋 Informações do Lote")
-            info_lote = lote_busca[["INDFISCAL", "NMVIA", "CDLOTE", "CDVIA"]]
-            st.dataframe(info_lote, use_container_width=True)
+            centro = lote_busca.geometry.iloc[0].centroid
+            m = folium.Map(location=[centro.y, centro.x], zoom_start=18, tiles="CartoDB positron")
         else:
-            st.warning("Lote não encontrado.")
+            st.warning("⚠️ Lote não encontrado.")
+            m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
+    else:
+        # Mapa inicial padrão
+        m = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles="CartoDB positron")
 
-    # Adiciona todos os lotes como camada padrão
+    # Camada GeoJSON com todos os lotes
+    campos_seguro = ["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"]
+
     folium.GeoJson(
         gdf_lotes,
-        name="Todos os Lotes",
+        name="Lotes",
         tooltip=folium.GeoJsonTooltip(
-            fields=["CDLOTE", "INDFISCAL", "CDVIA", "NMVIA"],
+            fields=campos_seguro,
             aliases=["Código do Lote", "Indicação Fiscal", "Código da Via", "Nome da Via"],
             sticky=True
         ),
-        style_function=lambda x: {
-            "fillColor": "#d3d3d3",
-            "color": "gray",
-            "weight": 1,
-            "fillOpacity": 0.3
-        }
+        style_function=lambda x: {"color": "gray", "weight": 1, "fillOpacity": 0.1}
     ).add_to(m)
 
-    folium.LayerControl().add_to(m)
-    Fullscreen().add_to(m)
-    MeasureControl(primary_length_unit='meters').add_to(m)
-    MiniMap(toggle_display=True).add_to(m)
+    # Destaque do lote buscado (se houver)
+    if ind_fiscal_interativo and not lote_busca.empty:
+        folium.GeoJson(
+            lote_busca,
+            tooltip="Lote Selecionado",
+            style_function=lambda x: {"color": "red", "weight": 2, "fillColor": "red", "fillOpacity": 0.4}
+        ).add_to(m)
 
-    # Renderiza o mapa
-    st_folium(m, width="100%", height=700)
+    # Plugins extras
+    folium.plugins.Fullscreen().add_to(m)
+    folium.plugins.MousePosition(
+        position='bottomright',
+        separator=' | ',
+        prefix='Coordenadas:',
+        lat_formatter="function(num) {return L.Util.formatNum(num, 6);}",
+        lng_formatter="function(num) {return L.Util.formatNum(num, 6);}"
+    ).add_to(m)
+    folium.plugins.Scale().add_to(m)
+    folium.LayerControl().add_to(m)
+
+    # Renderizar mapa no Streamlit
+    st_folium(m, width="100%", height=600)
+
+    # Exibir informações do lote (se houver)
+    if ind_fiscal_interativo and not lote_busca.empty:
+        st.markdown("### 🧾 Informações do Lote")
+        lote_info = lote_busca[["INDFISCAL", "CDLOTE", "CDVIA", "NMVIA"]]
+        lote_info.columns = ["Indicação Fiscal", "Código do Lote", "Código da Via", "Nome da Via"]
+        st.dataframe(lote_info, use_container_width=True)
+
 
 #---------------------------------------------------------- ANÁLISE ESTATÍSTICA --------------------------------------------------------------
 
