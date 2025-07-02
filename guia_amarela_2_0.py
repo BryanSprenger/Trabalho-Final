@@ -61,10 +61,6 @@ st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", l
 with st.sidebar:
     st.markdown("### 🔍 Consulta de Lote")
     st.text_input("Digite a Indicação Fiscal (INDFISCAL):", key="indfiscal_global")
-if not indfiscal_global:
-    st.warning("Digite uma Indicação Fiscal na barra lateral para iniciar a análise.")
-    st.stop()
-
 
 # Menu lateral
 st.sidebar.title("Navegação")
