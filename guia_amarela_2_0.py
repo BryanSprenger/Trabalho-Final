@@ -240,7 +240,7 @@ elif pagina == "📐 Área de Ocupação":
     st.markdown("Visualize o quanto do lote pode ser ocupado com base na taxa de ocupação da zona urbanística correspondente.")
 
     # Entrada da Indicação Fiscal
-    ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
+    ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
     if ind_fiscal_2:
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
@@ -377,7 +377,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
         # Entrada do usuário
-        ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
+        indfiscal_zona = st.session_state.get("indfiscal_global", "").strip().upper()
 
         if indfiscal_zona:
             indfiscal_zona = str(indfiscal_zona).strip()
@@ -472,7 +472,7 @@ elif pagina == "🗺️ Mapa Interativo":
     st.markdown("Visualize os lotes e consulte informações básicas com base na indicação fiscal (IF).")
 
     # Entrada do usuário para buscar lote
-    ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
+    ind_fiscal_map = st.session_state.get("indfiscal_global", "").strip().upper()
 
     # Garante tipo string
     gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
