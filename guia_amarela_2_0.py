@@ -251,7 +251,6 @@ elif pagina == "📐 Área de Ocupação":
     st.title("📐 Área de Ocupação do Lote")
     st.markdown("Visualize o quanto do lote pode ser ocupado com base na taxa de ocupação da zona urbanística correspondente.")
 
-    # Entrada da Indicação Fiscal
     ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
     if ind_fiscal_2:
@@ -272,9 +271,25 @@ elif pagina == "📐 Área de Ocupação":
 
             if geom.geom_type == "Polygon":
                 try:
-                    x, y = list(geom.exterior.coords.xy[0]), list(geom.exterior.coords.xy[1])
                     area_total = geom.area
                     st.markdown(f"**📏 Área total do lote:** {area_total:.2f} m²")
+
+                    coords = np.array(geom.exterior.coords)
+                    # Referência sul: menor Y
+                    ref_point = coords[np.argmin(coords[:, 1])]
+                    coords_transladadas = coords - ref_point
+
+                    # Rotação para alinhar o lado mais comprido com X
+                    delta = coords_transladadas[-1] - coords_transladadas[0]
+                    angle = np.arctan2(delta[1], delta[0])
+                    rot_matrix = np.array([
+                        [np.cos(-angle), -np.sin(-angle)],
+                        [np.sin(-angle), np.cos(-angle)]
+                    ])
+                    coords_rotacionadas = coords_transladadas @ rot_matrix.T
+
+                    x = coords_rotacionadas[:, 0].tolist()
+                    y = coords_rotacionadas[:, 1].tolist()
 
                     # Interseção com zoneamento
                     zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom)]
@@ -289,13 +304,12 @@ elif pagina == "📐 Área de Ocupação":
 
                             ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, int(taxa_maxima), int(taxa_maxima // 2), 5)
                             area_ocupada = area_total * (ocupacao_pct / 100)
-                            altura = 3  # altura simbólica
+                            altura = 3  # simbólica
 
-                            # Escala do bloco de ocupação
+                            # Escala para a projeção ocupada
                             escala = (area_ocupada / area_total) ** 0.5
                             x_centro = sum(x) / len(x)
                             y_centro = sum(y) / len(y)
-
                             x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
                             y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
                             z_base = [0] * len(x)
@@ -304,14 +318,18 @@ elif pagina == "📐 Área de Ocupação":
                             fig2 = go.Figure()
 
                             # Lote original
-                            fig2.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
-                                                        line=dict(color='lightgray', width=3),
-                                                        name='Área Total'))
+                            fig2.add_trace(go.Scatter3d(
+                                x=x, y=y, z=z_base, mode='lines',
+                                line=dict(color='lightgray', width=3),
+                                name='Área Total'
+                            ))
 
                             # Ocupação simulada
-                            fig2.add_trace(go.Scatter3d(x=x_scaled, y=y_scaled, z=z_top, mode='lines',
-                                                        line=dict(color='green', width=4),
-                                                        name=f'Ocupação ({ocupacao_pct}%)'))
+                            fig2.add_trace(go.Scatter3d(
+                                x=x_scaled, y=y_scaled, z=z_top, mode='lines',
+                                line=dict(color='green', width=4),
+                                name=f'Ocupação ({ocupacao_pct}%)'
+                            ))
 
                             for i in range(len(x)):
                                 fig2.add_trace(go.Scatter3d(
@@ -325,8 +343,8 @@ elif pagina == "📐 Área de Ocupação":
 
                             fig2.update_layout(
                                 scene=dict(
-                                    xaxis_title="X",
-                                    yaxis_title="Y",
+                                    xaxis_title="Distância (m)",
+                                    yaxis_title="Distância (m)",
                                     zaxis_title="Altura (m)"
                                 ),
                                 margin=dict(l=0, r=0, t=30, b=0)
@@ -334,7 +352,7 @@ elif pagina == "📐 Área de Ocupação":
 
                             st.plotly_chart(fig2, use_container_width=True)
 
-                            # Gráfico de pizza
+                            # Pizza
                             ocupacao_labels = ['Área Ocupada', 'Área Livre']
                             ocupacao_values = [area_ocupada, area_total - area_ocupada]
                             ocupacao_colors = ['green', 'lightgray']
@@ -365,6 +383,7 @@ elif pagina == "📐 Área de Ocupação":
                 st.error("⚠️ Geometria não é um polígono válido.")
     else:
         st.info("Insira a Indicação Fiscal para simular a ocupação do lote.")
+
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
