@@ -5,6 +5,7 @@ import geopandas as gpd
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 from folium.plugins import Fullscreen, MeasureControl, MiniMap
 from estudo_viabilidade_app import fazer_sugestao_para_lote
 
