@@ -54,13 +54,13 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
         }
 
+
+# --- Configuração da Página Streamlit ---
+st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
 # --- Campo de Indicação Fiscal Global ---
 with st.sidebar:
     st.markdown("### 🔍 Consulta de Lote")
     st.text_input("Digite a Indicação Fiscal (INDFISCAL):", key="indfiscal_global")
-
-# --- Configuração da Página Streamlit ---
-st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
 
 # Menu lateral
 st.sidebar.title("Navegação")
