@@ -155,9 +155,22 @@ elif pagina == "🏗️ Potencial Construtivo":
     st.title("🏗️ Potencial Construtivo do Lote")
     st.markdown("Visualize aqui o volume máximo permitido pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
-    # Entrada da INDFISCAL
+    import numpy as np
+
+    def rotacionar_geometria(coords, angulo_graus=0):
+        angulo_rad = np.deg2rad(angulo_graus)
+        rot_matrix = np.array([
+            [np.cos(angulo_rad), -np.sin(angulo_rad)],
+            [np.sin(angulo_rad),  np.cos(angulo_rad)]
+        ])
+        return coords @ rot_matrix.T
+
+    def centralizar_geometria(coords):
+        centroide = coords.mean(axis=0)
+        return coords - centroide
+
     ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
-   
+
     if ind_fiscal:
         gdf_lotes["INDFISCAL"] = gdf_lotes["INDFISCAL"].astype(str)
         ind_fiscal = str(ind_fiscal).strip()
@@ -167,7 +180,6 @@ elif pagina == "🏗️ Potencial Construtivo":
         if lote_selecionado.empty:
             st.warning("⚠️ Nenhum lote encontrado com essa Indicação Fiscal.")
         else:
-            # Exibir área do lote
             area_m2 = lote_selecionado.geometry.area.iloc[0]
             st.success(f"✅ Área do lote: **{area_m2:.2f} m²**")
 
@@ -178,40 +190,37 @@ elif pagina == "🏗️ Potencial Construtivo":
             elif geom_lote.geom_type == "MultiPolygon":
                 geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
-            # Interseção com zona
             try:
                 zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom_lote)]
 
                 if not zona_intersectada.empty:
                     zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
 
-                    # Busca o CA correspondente
                     zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
 
                     if not zona_match.empty:
                         ca_max = float(zona_match["CA_MAXIMO"].values[0])
                         st.info(f"🏙️ Zona: **{zona_nome}** — CA Máximo: **{ca_max}**")
 
-                        # Slider de simulação
                         ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.1, ca_max, min(1.0, ca_max), 0.1)
 
                         altura = (ca * area_m2) / (area_m2 ** 0.5)
 
-                        x, y = list(geom_lote.exterior.coords.xy[0]), list(geom_lote.exterior.coords.xy[1])
+                        coords = np.array(geom_lote.exterior.coords)
+                        coords_central = centralizar_geometria(coords)
+                        coords_rot = rotacionar_geometria(coords_central, angulo_graus=0)
+                        x, y = coords_rot[:, 0], coords_rot[:, 1]
                         z_base = [0] * len(x)
                         z_top = [altura] * len(x)
 
                         fig = go.Figure()
 
-                        # Base
                         fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
                                                    line=dict(color='blue', width=4), name='Base'))
 
-                        # Topo
                         fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
                                                    line=dict(color='lightblue', width=4), name='Topo'))
 
-                        # Laterais
                         for i in range(len(x)):
                             fig.add_trace(go.Scatter3d(
                                 x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
@@ -219,7 +228,13 @@ elif pagina == "🏗️ Potencial Construtivo":
                             ))
 
                         fig.update_layout(
-                            scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Altura (m)'),
+                            scene=dict(
+                                xaxis_title='Distância X (m)',
+                                yaxis_title='Distância Y (m)',
+                                zaxis_title='Altura (m)',
+                                aspectmode='data',
+                                camera=dict(eye=dict(x=1.5, y=1.5, z=1.2))
+                            ),
                             margin=dict(l=0, r=0, b=0, t=30)
                         )
 
