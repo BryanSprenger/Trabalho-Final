@@ -155,26 +155,10 @@ elif pagina == "🏗️ Potencial Construtivo":
     st.title("🏗️ Potencial Construtivo do Lote")
     st.markdown("Visualize aqui o volume máximo permitido pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
-    import numpy as np
-
-    def rotacionar_geometria(coords, angulo_graus=0):
-        angulo_rad = np.deg2rad(angulo_graus)
-        rot_matrix = np.array([
-            [np.cos(angulo_rad), -np.sin(angulo_rad)],
-            [np.sin(angulo_rad),  np.cos(angulo_rad)]
-        ])
-        return coords @ rot_matrix.T
-
-    def centralizar_geometria(coords):
-        centroide = coords.mean(axis=0)
-        return coords - centroide
-
     ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
-
+   
     if ind_fiscal:
         gdf_lotes["INDFISCAL"] = gdf_lotes["INDFISCAL"].astype(str)
-        ind_fiscal = str(ind_fiscal).strip()
-
         lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal]
 
         if lote_selecionado.empty:
@@ -190,61 +174,73 @@ elif pagina == "🏗️ Potencial Construtivo":
             elif geom_lote.geom_type == "MultiPolygon":
                 geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
-            try:
-                zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom_lote)]
+            # Define origem no ponto mais ao sul
+            coords = list(geom_lote.exterior.coords)
+            ponto_base = min(coords, key=lambda pt: pt[1])  # menor latitude
+            x_base, y_base = ponto_base
 
-                if not zona_intersectada.empty:
-                    zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
+            # Translada coordenadas em relação ao ponto mais ao sul
+            coords_transladadas = [(x - x_base, y - y_base) for x, y in coords]
 
-                    zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
+            # Alinha a geometria para que a maior dimensão fique paralela ao eixo X
+            coords_array = np.array(coords_transladadas)
+            x_arr, y_arr = coords_array[:, 0], coords_array[:, 1]
+            cov = np.cov(x_arr, y_arr)
+            eig_vals, eig_vecs = np.linalg.eigh(cov)
+            principal_axis = eig_vecs[:, np.argmax(eig_vals)]
+            angulo = np.arctan2(principal_axis[1], principal_axis[0])
+            cos_ang, sin_ang = np.cos(-angulo), np.sin(-angulo)
 
-                    if not zona_match.empty:
-                        ca_max = float(zona_match["CA_MAXIMO"].values[0])
-                        st.info(f"🏙️ Zona: **{zona_nome}** — CA Máximo: **{ca_max}**")
+            coords_rotacionadas = [
+                (x * cos_ang - y * sin_ang, x * sin_ang + y * cos_ang)
+                for x, y in coords_transladadas
+            ]
 
-                        ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.1, ca_max, min(1.0, ca_max), 0.1)
+            # Obtém o CA da zona
+            zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom_lote)]
+            if not zona_intersectada.empty:
+                zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
+                zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
 
-                        altura = (ca * area_m2) / (area_m2 ** 0.5)
+                if not zona_match.empty:
+                    ca_max = float(zona_match["CA_MAXIMO"].values[0])
+                    st.info(f"🏙️ Zona: **{zona_nome}** — CA Máximo: **{ca_max}**")
 
-                        coords = np.array(geom_lote.exterior.coords)
-                        coords_central = centralizar_geometria(coords)
-                        coords_rot = rotacionar_geometria(coords_central, angulo_graus=0)
-                        x, y = coords_rot[:, 0], coords_rot[:, 1]
-                        z_base = [0] * len(x)
-                        z_top = [altura] * len(x)
+                    ca = st.slider("Coeficiente de Aproveitamento (CA)", 0.1, ca_max, min(1.0, ca_max), 0.1)
+                    altura = (ca * area_m2) / (area_m2 ** 0.5)
 
-                        fig = go.Figure()
+                    x, y = zip(*coords_rotacionadas)
+                    z_base = [0] * len(x)
+                    z_top = [altura] * len(x)
 
-                        fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
-                                                   line=dict(color='blue', width=4), name='Base'))
+                    fig = go.Figure()
 
-                        fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
-                                                   line=dict(color='lightblue', width=4), name='Topo'))
+                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_base, mode='lines',
+                                               line=dict(color='blue', width=4), name='Base'))
+                    fig.add_trace(go.Scatter3d(x=x, y=y, z=z_top, mode='lines',
+                                               line=dict(color='lightblue', width=4), name='Topo'))
 
-                        for i in range(len(x)):
-                            fig.add_trace(go.Scatter3d(
-                                x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
-                                mode='lines', line=dict(color='lightblue', width=2), showlegend=False
-                            ))
+                    for i in range(len(x)):
+                        fig.add_trace(go.Scatter3d(
+                            x=[x[i], x[i]], y=[y[i], y[i]], z=[0, altura],
+                            mode='lines', line=dict(color='lightblue', width=2), showlegend=False
+                        ))
 
-                        fig.update_layout(
-                            scene=dict(
-                                xaxis_title='Distância X (m)',
-                                yaxis_title='Distância Y (m)',
-                                zaxis_title='Altura (m)',
-                                aspectmode='data',
-                                camera=dict(eye=dict(x=1.5, y=1.5, z=1.2))
-                            ),
-                            margin=dict(l=0, r=0, b=0, t=30)
-                        )
+                    fig.update_layout(
+                        scene=dict(
+                            xaxis_title='Distância X (m)',
+                            yaxis_title='Distância Y (m)',
+                            zaxis_title='Altura (m)',
+                            aspectmode='data'
+                        ),
+                        margin=dict(l=0, r=0, b=0, t=30)
+                    )
 
-                        st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de índices.")
+                    st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.warning("⚠️ A zona correspondente ao lote não foi identificada no mapa.")
-            except Exception as e:
-                st.error(f"Erro ao processar zona e CA: {e}")
+                    st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de índices.")
+            else:
+                st.warning("⚠️ A zona correspondente ao lote não foi identificada no mapa.")
     else:
         st.info("Digite uma Indicação Fiscal para iniciar.")
 
