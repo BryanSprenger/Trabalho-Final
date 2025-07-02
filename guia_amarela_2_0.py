@@ -570,9 +570,15 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     # Cruzamento entre alvarás e lotes
     gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
 
+    # Verifica interseção de INDFISCAL
     indfiscal_lotes = st.session_state.get("indfiscal_global", "").strip().upper()
     indfiscal_alvaras = set(df_alvaras['INDFISCAL'].unique())
-    interseccao = indfiscal_lotes.intersection(indfiscal_alvaras)
+    
+    # Verifica se a INDFISCAL informada pelo usuário está no conjunto de alvarás
+    if indfiscal_lotes in indfiscal_alvaras:
+        st.success(f"🔍 A indicação fiscal '{indfiscal_lotes}' está presente no conjunto de alvarás.")
+    else:
+        st.info(f"ℹ️ A indicação fiscal '{indfiscal_lotes}' NÃO está presente no conjunto de alvarás.")
 
     st.write(f"🔍 Foram encontradas {len(interseccao)} indicações fiscais em comum entre alvarás e lotes.")
 
