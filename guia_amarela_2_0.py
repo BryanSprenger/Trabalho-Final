@@ -54,7 +54,10 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
         }
 
-       
+# --- Campo de Indicação Fiscal Global ---
+with st.sidebar:
+    st.markdown("### 🔍 Consulta de Lote")
+    st.text_input("Digite a Indicação Fiscal (INDFISCAL):", key="indfiscal_global")
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -153,7 +156,7 @@ elif pagina == "🏗️ Potencial Construtivo":
     st.markdown("Visualize aqui o volume máximo permitido pelo coeficiente de aproveitamento, altura e recuos mínimos.")
 
     # Entrada da INDFISCAL
-    ind_fiscal = st.text_input("Digite a Indicação Fiscal (INDFISCAL):")
+    indfiscal = st.session_state.get("indfiscal_global", "").strip().upper()
    
     if ind_fiscal:
         gdf_lotes["INDFISCAL"] = gdf_lotes["INDFISCAL"].astype(str)
