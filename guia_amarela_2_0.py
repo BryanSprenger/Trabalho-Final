@@ -532,11 +532,21 @@ elif pagina == "🗺️ Mapa Interativo":
 elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     st.title("🏘️ Análise Estatística de Emissão de Alvarás")
 
-    # Seleção do ano pelo usuário
-    ano_selecionado = st.selectbox("Selecione o ano do relatório", list(urls_alvaras.keys()))
+    # Convertendo as chaves dos anos em inteiros e ordenando para o slider
+    anos_disponiveis = sorted([int(ano) for ano in urls_alvaras.keys()])
+
+    # Slider de timeline para escolher o ano
+    ano_selecionado = st.slider(
+        "📅 Selecione o ano do relatório:",
+        min_value=min(anos_disponiveis),
+        max_value=max(anos_disponiveis),
+        value=max(anos_disponiveis),
+        step=1,
+        format="%d"
+    )
+    ano_selecionado = str(ano_selecionado)  # Convertendo para string pois URLs usam str como chave
     url_csv = urls_alvaras[ano_selecionado]
 
-    # Carregamento dos dados de alvarás
     try:
         df_alvaras = pd.read_csv(url_csv, sep=';')
         st.success(f"Relatório de alvarás de {ano_selecionado} carregado com sucesso.")
@@ -552,40 +562,36 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
             break
 
     if col_fiscal_lotes:
-        # Padroniza a coluna
         gdf_lotes.rename(columns={col_fiscal_lotes: 'INDFISCAL'}, inplace=True)
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
         df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
         df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].str.replace('.', '', regex=False)
 
-           # Cruzamento entre alvarás e lotes
+    # Cruzamento entre alvarás e lotes
     gdf_alvaras_lotes = gdf_lotes.merge(df_alvaras, on='INDFISCAL', how='inner')
-    
-    # Verifica interseção de INDFISCAL
-    ind_fiscal = st.session_state.get("indfiscal_global", "").strip().upper()
+
+    indfiscal_lotes = st.session_state.get("indfiscal_global", "").strip().upper()
     indfiscal_alvaras = set(df_alvaras['INDFISCAL'].unique())
     interseccao = indfiscal_lotes.intersection(indfiscal_alvaras)
-    
+
     st.write(f"🔍 Foram encontradas {len(interseccao)} indicações fiscais em comum entre alvarás e lotes.")
-    
+
     num_cruzamentos = len(gdf_alvaras_lotes)
     if num_cruzamentos > 0:
         st.success(f"✅ Foram encontrados {num_cruzamentos} cruzamentos entre lotes e alvarás.")
     else:
         st.warning("⚠️ Nenhum cruzamento entre lotes e alvarás foi encontrado.")
-    
-    # Visualização no mapa, se houver cruzamentos
+
+    # Visualização no mapa
     if num_cruzamentos > 0 and 'Uso(s) Alvará' in gdf_alvaras_lotes.columns:
         st.markdown("### 🗺️ Visualização dos Lotes com Alvarás Emitidos por Uso")
-    
+
         m_alvaras = folium.Map(location=[-25.42, -49.25], zoom_start=13, tiles='CartoDB positron')
-    
-        # Cores por uso
+
         usos = gdf_alvaras_lotes['Uso(s) Alvará'].unique()
         cores = px.colors.qualitative.Safe
         cores_dict = {uso: cores[i % len(cores)] for i, uso in enumerate(usos)}
-    
-        # Adiciona todos os lotes ao mapa de uma vez, com estilos por uso
+
         folium.GeoJson(
             gdf_alvaras_lotes,
             name="Lotes com Alvará",
@@ -601,41 +607,31 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
                 "fillOpacity": 0.5
             }
         ).add_to(m_alvaras)
-                               
+
         folium.LayerControl().add_to(m_alvaras)
         st_folium(m_alvaras, width="100%", height=700)
-   
+
     elif num_cruzamentos > 0:
         st.warning("⚠️ A coluna 'Uso(s) Alvará' não foi encontrada nos dados cruzados.")
 
-        # Verifica se a coluna com INDFISCAL está presente
-    if 'INDFISCAL' in gdf_lotes.columns:
-    
-        # Verifica se o campo 'Uso(s) Alvará' existe
-        if 'Uso(s) Alvará' in df_alvaras.columns:
-    
-            # Gráfico de barras com distribuição por uso
-            st.subheader("📊 Distribuição de Alvarás por Uso")
-            uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
-            uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
-    
-            fig = px.bar(
-                uso_counts,
-                x='Uso(s) Alvará',
-                y='QUANTIDADE',
-                title=f'Alvarás emitidos por uso - {ano_selecionado}',
-                labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
-                color='Uso(s) Alvará',
-                color_discrete_map=cores_dict
-            )
-    
-            st.plotly_chart(fig, use_container_width=True)
-    
-        else:
-            st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
-    
-    else:
-        st.error("❌ A coluna com a indicação fiscal não foi encontrada no GeoDataFrame dos lotes.")
+    if 'INDFISCAL' in gdf_lotes.columns and 'Uso(s) Alvará' in df_alvaras.columns:
+        st.subheader("📊 Distribuição de Alvarás por Uso")
+        uso_counts = df_alvaras['Uso(s) Alvará'].value_counts().reset_index()
+        uso_counts.columns = ['Uso(s) Alvará', 'QUANTIDADE']
+
+        fig = px.bar(
+            uso_counts,
+            x='Uso(s) Alvará',
+            y='QUANTIDADE',
+            title=f'Alvarás emitidos por uso - {ano_selecionado}',
+            labels={'Uso(s) Alvará': 'Tipologia Construtiva', 'QUANTIDADE': 'Quantidade'},
+            color='Uso(s) Alvará',
+            color_discrete_map=cores_dict
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    elif 'Uso(s) Alvará' not in df_alvaras.columns:
+        st.info("ℹ️ O campo 'Uso(s) Alvará' não está presente no relatório.")
 
 
 #---------------------------------------------------------- ESTUDO DE VIABILIDADE --------------------------------------------------------------
