@@ -264,6 +264,16 @@ elif pagina == "📐 Área de Ocupação":
 
     ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
+    # Verifica se há alvará correspondente
+    if 'df_alvaras' in globals():
+        df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str).str.replace('.', '', regex=False).str.zfill(8)
+        alvaras_encontrados = df_alvaras[df_alvaras['INDFISCAL'] == ind_fiscal_2]
+    
+        if not alvaras_encontrados.empty:
+            st.success(f"✅ {len(alvaras_encontrados)} alvará(s) encontrado(s) para a IF {ind_fiscal_2}.")
+        else:
+            st.info(f"ℹ️ Nenhum alvará encontrado para a IF {ind_fiscal_2}.")
+
     if ind_fiscal_2:
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
         ind_fiscal_2 = ind_fiscal_2.strip()
