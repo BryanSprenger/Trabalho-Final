@@ -28,10 +28,6 @@ df_zoneamento_indices = pd.read_csv(url_indicadores_csv, sep=",")
 #Carregando os relatórios de Alvará
 # Mapeamento de anos para URLs dos arquivos CSV
 urls_alvaras = {
-    "2000": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2000.csv",
-    "2001": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2001.csv",
-    "2002": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2002.csv",
-    "2003": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2003.csv",
     "2004": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2004.csv",
     "2005": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2005.csv",
     "2006": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2006.csv",
@@ -57,7 +53,7 @@ urls_alvaras = {
         }
 
 # Verifica se df_alvaras existe no escopo global e realiza a correção da coluna INDFISCAL
-df_alvaras = pd.read_csv(url_csv, sep=';')
+df_alvaras = pd.read_csv(urls_alvaras, sep=';')
 if 'df_alvaras' in globals():
     try:
         df_alvaras['INDFISCAL'] = (
