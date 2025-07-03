@@ -336,9 +336,9 @@ elif pagina == "📐 Área de Ocupação":
 
                             # 🔍 Verifica se há alvarás com área construída
                             area_construida = 0
-                            if 'df_alvaras' in globals() and 'INDFISCAL' in df_alvaras.columns:
-                                df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
-                                alvaras_lote = df_alvaras[df_alvaras['INDFISCAL'] == ind_fiscal_2]
+                            if 'df_alvaras_total' in globals() and 'INDFISCAL' in df_alvaras_total.columns:
+                                df_alvaras_total['INDFISCAL'] = df_alvaras_total['INDFISCAL'].astype(str)
+                                alvaras_lote = df_alvaras_total[df_alvaras_total['INDFISCAL'] == ind_fiscal_2]
 
                                 if not alvaras_lote.empty and 'Metragem Construída Lote' in alvaras_lote.columns:
                                     try:
