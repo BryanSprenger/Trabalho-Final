@@ -249,7 +249,7 @@ elif pagina == "🏗️ Potencial Construtivo":
 
 elif pagina == "📐 Área de Ocupação":
     st.title("📐 Área de Ocupação do Lote")
-    st.markdown("Visualize o quanto do lote pode ser ocupado com base na taxa de ocupação da zona urbanística correspondente.")
+    st.markdown("Visualize o quanto do lote pode ser ocupado com base na taxa de ocupação da zona urbanística correspondente e o quanto já foi construído segundo os alvarás emitidos.")
 
     ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
@@ -275,23 +275,20 @@ elif pagina == "📐 Área de Ocupação":
                     st.markdown(f"**📏 Área total do lote:** {area_total:.2f} m²")
 
                     coords = np.array(geom.exterior.coords)
-                    # Referência sul: menor Y
                     ref_point = coords[np.argmin(coords[:, 1])]
                     coords_transladadas = coords - ref_point
 
-                    # Rotação para alinhar o lado mais comprido com X
                     delta = coords_transladadas[-1] - coords_transladadas[0]
                     angle = np.arctan2(delta[1], delta[0])
                     rot_matrix = np.array([
                         [np.cos(-angle), -np.sin(-angle)],
-                        [np.sin(-angle), np.cos(-angle)]
+                        [np.sin(-angle),  np.cos(-angle)]
                     ])
                     coords_rotacionadas = coords_transladadas @ rot_matrix.T
 
                     x = coords_rotacionadas[:, 0].tolist()
                     y = coords_rotacionadas[:, 1].tolist()
 
-                    # Interseção com zoneamento
                     zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom)]
 
                     if not zona_intersectada.empty:
@@ -304,41 +301,58 @@ elif pagina == "📐 Área de Ocupação":
 
                             ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, int(taxa_maxima), int(taxa_maxima // 2), 5)
                             area_ocupada = area_total * (ocupacao_pct / 100)
-                            altura = 3  # simbólica
+                            altura = 3
 
-                            # Escala para a projeção ocupada
                             escala = (area_ocupada / area_total) ** 0.5
                             x_centro = sum(x) / len(x)
                             y_centro = sum(y) / len(y)
                             x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
                             y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
-                            z_base = [0] * len(x)
-                            z_top = [altura] * len(x)
 
+                            # 🔍 Verifica se há alvarás com área construída
+                            area_construida = 0
+                            if 'df_alvaras' in globals() and 'INDFISCAL' in df_alvaras.columns:
+                                df_alvaras['INDFISCAL'] = df_alvaras['INDFISCAL'].astype(str)
+                                alvaras_lote = df_alvaras[df_alvaras['INDFISCAL'] == ind_fiscal_2]
+
+                                if not alvaras_lote.empty and 'Metragem Construída Lote' in alvaras_lote.columns:
+                                    try:
+                                        alvaras_lote['Metragem Construída Lote'] = pd.to_numeric(alvaras_lote['Metragem Construída Lote'], errors='coerce')
+                                        area_construida = alvaras_lote['Metragem Construída Lote'].sum()
+                                    except Exception as e:
+                                        st.warning(f"Erro ao processar área construída: {e}")
+
+                            if area_construida > area_ocupada:
+                                st.warning(f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²).")
+                                area_construida = area_ocupada
+
+                            area_disponivel = max(area_ocupada - area_construida, 0)
+
+                            # 🧱 Gráfico 3D
                             fig2 = go.Figure()
 
-                            # Lote original
                             fig2.add_trace(go.Scatter3d(
-                                x=x, y=y, z=z_base, mode='lines',
-                                line=dict(color='lightgray', width=3),
-                                name='Área Total'
+                                x=x, y=y, z=[0] * len(x), mode='lines',
+                                line=dict(color='lightgray', width=2), name='Área Total'
                             ))
 
-                            # Ocupação simulada
                             fig2.add_trace(go.Scatter3d(
-                                x=x_scaled, y=y_scaled, z=z_top, mode='lines',
-                                line=dict(color='green', width=4),
-                                name=f'Ocupação ({ocupacao_pct}%)'
+                                x=x_scaled, y=y_scaled, z=[altura] * len(x_scaled), mode='lines',
+                                line=dict(color='green', width=4), name=f'Ocupação Simulada ({ocupacao_pct}%)'
                             ))
 
-                            for i in range(len(x)):
+                            for i in range(len(x_scaled)):
                                 fig2.add_trace(go.Scatter3d(
                                     x=[x_scaled[i], x_scaled[i]],
                                     y=[y_scaled[i], y_scaled[i]],
                                     z=[0, altura],
-                                    mode='lines',
-                                    line=dict(color='green', width=2),
-                                    showlegend=False
+                                    mode='lines', line=dict(color='green', width=2), showlegend=False
+                                ))
+
+                            if area_construida > 0:
+                                fig2.add_trace(go.Scatter3d(
+                                    x=x_scaled, y=y_scaled, z=[3] * len(x_scaled), mode='lines',
+                                    line=dict(color='gray', width=4), name='Área já construída'
                                 ))
 
                             fig2.update_layout(
@@ -352,15 +366,11 @@ elif pagina == "📐 Área de Ocupação":
 
                             st.plotly_chart(fig2, use_container_width=True)
 
-                            # Pizza
-                            ocupacao_labels = ['Área Ocupada', 'Área Livre']
-                            ocupacao_values = [area_ocupada, area_total - area_ocupada]
-                            ocupacao_colors = ['green', 'lightgray']
-
+                            # 🍕 Gráfico de pizza
                             fig_pizza = go.Figure(data=[go.Pie(
-                                labels=ocupacao_labels,
-                                values=ocupacao_values,
-                                marker=dict(colors=ocupacao_colors),
+                                labels=['Área construída', 'Área restante para ocupação', 'Área livre'],
+                                values=[area_construida, area_disponivel, area_total - area_ocupada],
+                                marker=dict(colors=['gray', 'green', 'lightgray']),
                                 hole=0.4
                             )])
 
@@ -371,7 +381,9 @@ elif pagina == "📐 Área de Ocupação":
                             )
 
                             st.plotly_chart(fig_pizza, use_container_width=True)
-                            st.markdown(f"📌 **Área ocupada simulada:** {area_ocupada:.2f} m²")
+
+                            st.markdown(f"🏗️ **Área construída declarada:** {area_construida:.2f} m²")
+                            st.markdown(f"📌 **Área restante para ocupação:** {area_disponivel:.2f} m²")
 
                         else:
                             st.warning("⚠️ Zona identificada no mapa, mas não encontrada na tabela de índices.")
@@ -383,7 +395,6 @@ elif pagina == "📐 Área de Ocupação":
                 st.error("⚠️ Geometria não é um polígono válido.")
     else:
         st.info("Insira a Indicação Fiscal para simular a ocupação do lote.")
-
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
