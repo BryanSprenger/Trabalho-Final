@@ -55,6 +55,17 @@ urls_alvaras = {
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
         }
 
+# Verifica se df_alvaras existe no escopo global e realiza a correção da coluna INDFISCAL
+if 'df_alvaras' in globals():
+    try:
+        df_alvaras['INDFISCAL'] = (
+            df_alvaras['INDFISCAL']
+            .astype(str)
+            .str.replace('.', '', regex=False)  # Remove os pontos
+            .str.zfill(8)                       # Garante que tenha 8 dígitos com zeros à esquerda
+        )
+    except Exception as e:
+        print(f"Erro ao padronizar a coluna INDFISCAL em df_alvaras: {e}")
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
@@ -590,7 +601,13 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
 
     # Carregamento dos dados de alvarás
     try:
-        df_alvaras = pd.read_csv(url_csv, sep=';', encoding='utf-8')
+        # Padronização da Indicação Fiscal nos dados de alvarás
+        df_alvaras['INDFISCAL'] = (
+            df_alvaras['INDFISCAL']
+            .astype(str)
+            .str.replace('.', '', regex=False)  # Remove pontos
+            .str.zfill(8)                       # Garante 8 dígitos com zero à esquerda, se necessário
+        )
         st.success(f"Relatório de alvarás de {ano_selecionado} carregado com sucesso.")
     except Exception as e:
         st.error(f"Erro ao carregar os dados do relatório: {e}")
