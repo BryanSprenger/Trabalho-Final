@@ -18,6 +18,7 @@ url_indicadores_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-
 #GDFs
 gdf_lotes = gpd.read_file(url_lotes)
 gdf_lotes = gdf_lotes[gdf_lotes.is_valid & ~gdf_lotes.geometry.is_empty]
+gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str).str.replace('.', '', regex=False).str.zfill(8)
 gdf_zonas = gpd.read_file(url_zonas_geojson)
 gdf_zonas = gdf_zonas.set_geometry("geometry")  # caso necessário
 
@@ -56,6 +57,7 @@ urls_alvaras = {
         }
 
 # Verifica se df_alvaras existe no escopo global e realiza a correção da coluna INDFISCAL
+df_alvaras = pd.read_csv(url_csv, sep=';')
 if 'df_alvaras' in globals():
     try:
         df_alvaras['INDFISCAL'] = (
