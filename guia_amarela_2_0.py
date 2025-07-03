@@ -25,7 +25,6 @@ gdf_zonas = gdf_zonas.set_geometry("geometry")  # caso necessário
 df_zoneamento_indices = pd.read_csv(url_indicadores_csv, sep=",")
 
     
-#Carregando os relatórios de Alvará
 # Mapeamento de anos para URLs dos arquivos CSV
 urls_alvaras = {
     "2004": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2004.csv",
@@ -50,20 +49,27 @@ urls_alvaras = {
     "2023": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2023.csv",
     "2024": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2024.csv",
     "2025": "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/RELATORIOS/RELATORIO_2025.csv"
-        }
+}
 
-# Verifica se df_alvaras existe no escopo global e realiza a correção da coluna INDFISCAL
-df_alvaras = pd.read_csv(urls_alvaras, sep=';')
-if 'df_alvaras' in globals():
-    try:
-        df_alvaras['INDFISCAL'] = (
-            df_alvaras['INDFISCAL']
-            .astype(str)
-            .str.replace('.', '', regex=False)  # Remove os pontos
-            .str.zfill(8)                       # Garante que tenha 8 dígitos com zeros à esquerda
-        )
-    except Exception as e:
-        print(f"Erro ao padronizar a coluna INDFISCAL em df_alvaras: {e}")
+# Função para carregar e unificar os relatórios de alvarás
+@st.cache_data(show_spinner="🔄 Carregando todos os relatórios de alvarás...")
+def carregar_todos_alvaras(url_dict):
+    lista_dfs = []
+    for ano, url in url_dict.items():
+        try:
+            df = pd.read_csv(url, sep=';')
+            df["ANO"] = int(ano)
+            df["INDFISCAL"] = df["INDFISCAL"].astype(str).str.replace('.', '', regex=False).str.strip()
+            lista_dfs.append(df)
+        except Exception as e:
+            st.warning(f"⚠️ Erro ao carregar {ano}: {e}")
+    if lista_dfs:
+        return pd.concat(lista_dfs, ignore_index=True)
+    else:
+        return pd.DataFrame()
+
+# DataFrame final com todos os alvarás unificados
+df_alvaras_total = carregar_todos_alvaras(urls_alvaras)
 
 # --- Configuração da Página Streamlit ---
 st.set_page_config(page_title="Guia Amarela Interativa", page_icon=":scroll:", layout="wide")
