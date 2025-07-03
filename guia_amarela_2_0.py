@@ -52,7 +52,7 @@ urls_alvaras = {
 }
 
 # Função para carregar e unificar os relatórios de alvarás
-@st.cache_data(show_spinner="🔄 Carregando todos os relatórios de alvarás...")
+@st.cache_data(show_spinner="🔄 Carregando relatórios de alvarás...")
 def carregar_todos_alvaras(url_dict):
     lista_dfs = []
     for ano, url in url_dict.items():
