@@ -614,6 +614,7 @@ elif pagina == "🏘️ Análise Estatística de Emissão de Alvarás":
     url_csv = urls_alvaras[ano_selecionado]
 
     # Carregamento dos dados de alvarás
+    df_alvaras = pd.read_csv(url_csv, sep=';')
     try:
         # Padronização da Indicação Fiscal nos dados de alvarás
         df_alvaras['INDFISCAL'] = (
