@@ -341,19 +341,39 @@ elif pagina == "📐 Área de Ocupação":
                             y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
 
                             # Área construída real (via alvará)
-                            area_construida = 0
-                            if not alvaras_encontrados.empty and 'Metragem Construída Lote' in alvaras_encontrados.columns:
-                                try:
-                                    alvaras_encontrados['Metragem Construída Lote'] = (
-                                        alvaras_encontrados['Metragem Construída Lote']
-                                        .astype(str)
-                                        .str.replace(',', '.')
-                                        .str.replace(' ', '')
-                                    )
-                                    alvaras_encontrados['Metragem Construída Lote'] = pd.to_numeric(
-                                        alvaras_encontrados['Metragem Construída Lote'], errors='coerce'
-                                    )
-                                    area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
+                            alvaras_encontrados['Metragem Construída Lote'] = (
+                                alvaras_encontrados['Metragem Construída Lote']
+                                .astype(str)
+                                .str.replace(',', '.')
+                                .str.replace(' ', '')
+                                .str.extract(r'(\d+\.?\d*)')[0]
+                            )
+                            alvaras_encontrados['Metragem Construída Lote'] = pd.to_numeric(
+                                alvaras_encontrados['Metragem Construída Lote'], errors='coerce'
+                            )
+                            
+                            # Limpeza da quantidade de pavimentos
+                            if 'Quantidade Pavimentos' in alvaras_encontrados.columns:
+                                alvaras_encontrados['Quantidade Pavimentos'] = pd.to_numeric(
+                                    alvaras_encontrados['Quantidade Pavimentos'], errors='coerce'
+                                )
+                                alvaras_encontrados['Quantidade Pavimentos'] = alvaras_encontrados['Quantidade Pavimentos'].fillna(1)
+                            
+                                # Divide a área construída pelo número de pavimentos
+                                alvaras_encontrados['Area_Ocupada_Calculada'] = (
+                                    alvaras_encontrados['Metragem Construída Lote'] /
+                                    alvaras_encontrados['Quantidade Pavimentos']
+                                )
+                                area_construida = alvaras_encontrados['Area_Ocupada_Calculada'].sum()
+                            
+                                st.markdown(
+                                    f"🏗️ **Área construída total:** {alvaras_encontrados['Metragem Construída Lote'].sum():.2f} m² "
+                                    f"dividida por {int(alvaras_encontrados['Quantidade Pavimentos'].max())} pavimento(s) "
+                                    f"→ **Área ocupada projetada:** {area_construida:.2f} m²"
+                                )
+                            else:
+                                st.warning("Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
+                                    
                                     st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
                                 except Exception as e:
                                     st.warning(f"⚠️ Erro ao processar área construída: {e}")
