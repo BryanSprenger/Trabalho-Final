@@ -374,7 +374,7 @@ elif pagina == "📐 Área de Ocupação":
                             else:
                                 st.warning("Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
                                     
-                                    st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
+                                st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
                                 except Exception as e:
                                     st.warning(f"⚠️ Erro ao processar área construída: {e}")
 
