@@ -372,17 +372,21 @@ elif pagina == "📐 Área de Ocupação":
                                     f"→ **Área ocupada projetada:** {area_construida:.2f} m²"
                                 )
                             else:
-                                st.warning("Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
-                                    
+                                area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
+                                st.warning("⚠️ Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
                                 st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
-                                except Exception as e:
-                                    st.warning(f"⚠️ Erro ao processar área construída: {e}")
-
-                            if area_construida > area_ocupada:
-                                st.warning(f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²).")
-                                area_construida = area_ocupada
-
-                            area_disponivel = max(area_ocupada - area_construida, 0)
+                    except Exception as e:
+                        st.warning(f"⚠️ Erro ao processar área construída: {e}")
+                    
+                    # 📉 Verificação contra ocupação máxima permitida
+                    if area_construida > area_ocupada:
+                        st.warning(
+                            f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
+                        )
+                        area_construida = area_ocupada
+                    
+                    # 🧮 Cálculo final da área ainda disponível
+                    area_disponivel = max(area_ocupada - area_construida, 0)
 
                             # 🧱 Gráfico 3D
                             fig2 = go.Figure()
