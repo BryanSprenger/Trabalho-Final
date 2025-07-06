@@ -268,116 +268,116 @@ elif pagina == "📐 Área de Ocupação":
 
     ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
-    # 🔍 Verifica existência de alvarás e padroniza Indicação Fiscal
-    if 'df_alvaras_total' in globals() and not df_alvaras_total.empty:
-        df_alvaras_total['INDFISCAL'] = (
-            df_alvaras_total['INDFISCAL']
-            .astype(str)
-            .str.replace('.', '', regex=False)
-            .str.zfill(8)
-        )
-        ind_fiscal_2 = ind_fiscal_2.strip().zfill(8)
-    
-        alvaras_encontrados = df_alvaras_total[df_alvaras_total['INDFISCAL'] == ind_fiscal_2]
-    
-        if not alvaras_encontrados.empty:
-            st.success(f"✅ {len(alvaras_encontrados)} alvará(s) encontrado(s) para a IF {ind_fiscal_2}.")
+        # 🔍 Verifica existência de alvarás e padroniza Indicação Fiscal
+        if 'df_alvaras_total' in globals() and not df_alvaras_total.empty:
+            df_alvaras_total['INDFISCAL'] = (
+                df_alvaras_total['INDFISCAL']
+                .astype(str)
+                .str.replace('.', '', regex=False)
+                .str.zfill(8)
+            )
+            ind_fiscal_2 = ind_fiscal_2.strip().zfill(8)
+        
+            alvaras_encontrados = df_alvaras_total[df_alvaras_total['INDFISCAL'] == ind_fiscal_2]
+        
+            if not alvaras_encontrados.empty:
+                st.success(f"✅ {len(alvaras_encontrados)} alvará(s) encontrado(s) para a IF {ind_fiscal_2}.")
+            else:
+                st.info(f"ℹ️ Nenhum alvará encontrado para a IF {ind_fiscal_2}.")
         else:
-            st.info(f"ℹ️ Nenhum alvará encontrado para a IF {ind_fiscal_2}.")
-    else:
-        alvaras_encontrados = pd.DataFrame()
-    
-    # 🎯 Seleciona lote correspondente
-    if ind_fiscal_2:
-        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
-        lote_2 = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_2]
-    
-        if lote_2.empty:
-            st.warning("⚠️ Lote não encontrado.")
-        else:
-            geom = lote_2.geometry.values[0]
-    
-            if geom.is_empty:
-                st.error("⚠️ Geometria do lote vazia.")
-            elif geom.geom_type == "MultiPolygon":
-                geom = max(geom.geoms, key=lambda a: a.area)
-    
-            if geom.geom_type == "Polygon":
-                try:
-                    area_total = geom.area
-                    st.markdown(f"**📏 Área total do lote:** {area_total:.2f} m²")
-    
-                    # 📐 Processamento de geometria e rotação
-                    coords = np.array(geom.exterior.coords)
-                    ref_point = coords[np.argmin(coords[:, 1])]
-                    coords_transladadas = coords - ref_point
-    
-                    delta = coords_transladadas[-1] - coords_transladadas[0]
-                    angle = np.arctan2(delta[1], delta[0])
-                    rot_matrix = np.array([
-                        [np.cos(-angle), -np.sin(-angle)],
-                        [np.sin(-angle),  np.cos(-angle)]
-                    ])
-                    coords_rotacionadas = coords_transladadas @ rot_matrix.T
-                    x = coords_rotacionadas[:, 0].tolist()
-                    y = coords_rotacionadas[:, 1].tolist()
-    
-                    # 🧭 Identifica zona urbanística
-                    zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom)]
-                    if not zona_intersectada.empty:
-                        zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
-                        zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
-    
-                        if not zona_match.empty:
-                            taxa_maxima = float(zona_match["TAXA_OCUPACAO_MAX"].values[0])
-                            st.info(f"🏙️ Zona: **{zona_nome}** — Taxa Máxima de Ocupação: **{taxa_maxima:.1f}%**")
-    
-                            # 📦 Ocupação simulada
-                            ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, int(taxa_maxima), int(taxa_maxima // 2), 5)
-                            area_ocupada = area_total * (ocupacao_pct / 100)
-                            altura = 3
-    
-                            # 🔨 Escala do polígono
-                            escala = (area_ocupada / area_total) ** 0.5
-                            x_centro = sum(x) / len(x)
-                            y_centro = sum(y) / len(y)
-                            x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
-                            y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
-    
-                            # 📊 Área construída real (via alvará)
-                            area_construida = 0
-                            if not alvaras_encontrados.empty and 'Metragem Construída Lote' in alvaras_encontrados.columns:
-                                try:
-                                    alvaras_encontrados['Metragem Construída Lote'] = (
-                                        alvaras_encontrados['Metragem Construída Lote']
-                                        .astype(str)
-                                        .str.replace(',', '.')
-                                        .str.replace(' ', '')
+            alvaras_encontrados = pd.DataFrame()
+        
+        # 🎯 Seleciona lote correspondente
+        if ind_fiscal_2:
+            gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+            lote_2 = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_2]
+        
+            if lote_2.empty:
+                st.warning("⚠️ Lote não encontrado.")
+            else:
+                geom = lote_2.geometry.values[0]
+        
+                if geom.is_empty:
+                    st.error("⚠️ Geometria do lote vazia.")
+                elif geom.geom_type == "MultiPolygon":
+                    geom = max(geom.geoms, key=lambda a: a.area)
+        
+                if geom.geom_type == "Polygon":
+                    try:
+                        area_total = geom.area
+                        st.markdown(f"**📏 Área total do lote:** {area_total:.2f} m²")
+        
+                        # 📐 Processamento de geometria e rotação
+                        coords = np.array(geom.exterior.coords)
+                        ref_point = coords[np.argmin(coords[:, 1])]
+                        coords_transladadas = coords - ref_point
+        
+                        delta = coords_transladadas[-1] - coords_transladadas[0]
+                        angle = np.arctan2(delta[1], delta[0])
+                        rot_matrix = np.array([
+                            [np.cos(-angle), -np.sin(-angle)],
+                            [np.sin(-angle),  np.cos(-angle)]
+                        ])
+                        coords_rotacionadas = coords_transladadas @ rot_matrix.T
+                        x = coords_rotacionadas[:, 0].tolist()
+                        y = coords_rotacionadas[:, 1].tolist()
+        
+                        # 🧭 Identifica zona urbanística
+                        zona_intersectada = gdf_zonas[gdf_zonas.intersects(geom)]
+                        if not zona_intersectada.empty:
+                            zona_nome = zona_intersectada.iloc[0]["NM_ZONA"]
+                            zona_match = df_zoneamento_indices[df_zoneamento_indices["ZONA"] == zona_nome]
+        
+                            if not zona_match.empty:
+                                taxa_maxima = float(zona_match["TAXA_OCUPACAO_MAX"].values[0])
+                                st.info(f"🏙️ Zona: **{zona_nome}** — Taxa Máxima de Ocupação: **{taxa_maxima:.1f}%**")
+        
+                                # 📦 Ocupação simulada
+                                ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, int(taxa_maxima), int(taxa_maxima // 2), 5)
+                                area_ocupada = area_total * (ocupacao_pct / 100)
+                                altura = 3
+        
+                                # 🔨 Escala do polígono
+                                escala = (area_ocupada / area_total) ** 0.5
+                                x_centro = sum(x) / len(x)
+                                y_centro = sum(y) / len(y)
+                                x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
+                                y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
+        
+                                # 📊 Área construída real (via alvará)
+                                area_construida = 0
+                                if not alvaras_encontrados.empty and 'Metragem Construída Lote' in alvaras_encontrados.columns:
+                                    try:
+                                        alvaras_encontrados['Metragem Construída Lote'] = (
+                                            alvaras_encontrados['Metragem Construída Lote']
+                                            .astype(str)
+                                            .str.replace(',', '.')
+                                            .str.replace(' ', '')
+                                        )
+                                        alvaras_encontrados['Metragem Construída Lote'] = pd.to_numeric(
+                                            alvaras_encontrados['Metragem Construída Lote'], errors='coerce'
+                                        )
+                                        area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
+                                        st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
+                                    except Exception as e:
+                                        st.warning(f"⚠️ Erro ao processar área construída: {e}")
+        
+                                # 📉 Verifica se extrapola
+                                if area_construida > area_ocupada:
+                                    st.warning(
+                                        f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
                                     )
-                                    alvaras_encontrados['Metragem Construída Lote'] = pd.to_numeric(
-                                        alvaras_encontrados['Metragem Construída Lote'], errors='coerce'
-                                    )
-                                    area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
-                                    st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
-                                except Exception as e:
-                                    st.warning(f"⚠️ Erro ao processar área construída: {e}")
-    
-                            # 📉 Verifica se extrapola
-                            if area_construida > area_ocupada:
-                                st.warning(
-                                    f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
-                                )
-                                area_construida = area_ocupada
-    
-                            area_disponivel = max(area_ocupada - area_construida, 0)
-    
-                            # (continuação: visualização 3D e gráficos...)
+                                    area_construida = area_ocupada
+        
+                                area_disponivel = max(area_ocupada - area_construida, 0)
+        
+                                # (continuação: visualização 3D e gráficos...)
+                            else:
+                                st.warning("⚠️ Zona identificada no mapa, mas não encontrada na tabela de índices.")
                         else:
-                            st.warning("⚠️ Zona identificada no mapa, mas não encontrada na tabela de índices.")
-                    else:
-                        st.warning("⚠️ A zona urbanística do lote não foi identificada.")
-                except Exception as e:
-                    st.error(f"❌ Erro durante o processamento da geometria: {e}")
+                            st.warning("⚠️ A zona urbanística do lote não foi identificada.")
+                    except Exception as e:
+                        st.error(f"❌ Erro durante o processamento da geometria: {e}")
 
 
                             # 🧱 Gráfico 3D
