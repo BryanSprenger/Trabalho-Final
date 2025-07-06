@@ -277,9 +277,9 @@ elif pagina == "📐 Área de Ocupação":
             .str.zfill(8)
         )
         ind_fiscal_2 = ind_fiscal_2.strip().zfill(8)
-    
+        
         alvaras_encontrados = df_alvaras_total[df_alvaras_total['INDFISCAL'] == ind_fiscal_2]
-    
+        
         if not alvaras_encontrados.empty:
             st.success(f"✅ {len(alvaras_encontrados)} alvará(s) encontrado(s) para a IF {ind_fiscal_2}.")
         else:
@@ -358,14 +358,14 @@ elif pagina == "📐 Área de Ocupação":
                                     alvaras_encontrados['Quantidade Pavimentos'], errors='coerce'
                                 )
                                 alvaras_encontrados['Quantidade Pavimentos'] = alvaras_encontrados['Quantidade Pavimentos'].fillna(1)
-                            
+                                
                                 # Divide a área construída pelo número de pavimentos
                                 alvaras_encontrados['Area_Ocupada_Calculada'] = (
                                     alvaras_encontrados['Metragem Construída Lote'] /
                                     alvaras_encontrados['Quantidade Pavimentos']
                                 )
                                 area_construida = alvaras_encontrados['Area_Ocupada_Calculada'].sum()
-                            
+                                
                                 st.markdown(
                                     f"🏗️ **Área construída total:** {alvaras_encontrados['Metragem Construída Lote'].sum():.2f} m² "
                                     f"dividida por {int(alvaras_encontrados['Quantidade Pavimentos'].max())} pavimento(s) "
@@ -375,81 +375,81 @@ elif pagina == "📐 Área de Ocupação":
                                 area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
                                 st.warning("⚠️ Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
                                 st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
-                    except Exception as e:
-                        st.warning(f"⚠️ Erro ao processar área construída: {e}")
-                    
-                    # 📉 Verificação contra ocupação máxima permitida
-                    if area_construida > area_ocupada:
-                        st.warning(
-                            f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
+                        except Exception as e:
+                            st.warning(f"⚠️ Erro ao processar área construída: {e}")
+                        
+                        # 📉 Verificação contra ocupação máxima permitida
+                        if area_construida > area_ocupada:
+                            st.warning(
+                                f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
+                            )
+                            area_construida = area_ocupada
+                        
+                        # 🧮 Cálculo final da área ainda disponível
+                        area_disponivel = max(area_ocupada - area_construida, 0)
+
+                        # 🧱 Gráfico 3D
+                        fig2 = go.Figure()
+
+                        fig2.add_trace(go.Scatter3d(
+                            x=x, y=y, z=[0] * len(x), mode='lines',
+                            line=dict(color='lightgray', width=2), name='Área Total'
+                        ))
+
+                        fig2.add_trace(go.Scatter3d(
+                            x=x_scaled, y=y_scaled, z=[altura] * len(x_scaled), mode='lines',
+                            line=dict(color='green', width=4), name=f'Ocupação Simulada ({ocupacao_pct}%)'
+                        ))
+
+                        for i in range(len(x_scaled)):
+                            fig2.add_trace(go.Scatter3d(
+                                x=[x_scaled[i], x_scaled[i]],
+                                y=[y_scaled[i], y_scaled[i]],
+                                z=[0, altura],
+                                mode='lines', line=dict(color='green', width=2), showlegend=False
+                            ))
+
+                        if area_construida > 0:
+                            fig2.add_trace(go.Scatter3d(
+                                x=x_scaled, y=y_scaled, z=[3] * len(x_scaled), mode='lines',
+                                line=dict(color='gray', width=4), name='Área já construída'
+                            ))
+
+                        fig2.update_layout(
+                            scene=dict(
+                                xaxis_title="Distância (m)",
+                                yaxis_title="Distância (m)",
+                                zaxis_title="Altura (m)"
+                            ),
+                            margin=dict(l=0, r=0, t=30, b=0)
                         )
-                        area_construida = area_ocupada
-                    
-                    # 🧮 Cálculo final da área ainda disponível
-                    area_disponivel = max(area_ocupada - area_construida, 0)
 
-                            # 🧱 Gráfico 3D
-                            fig2 = go.Figure()
+                        st.plotly_chart(fig2, use_container_width=True)
 
-                            fig2.add_trace(go.Scatter3d(
-                                x=x, y=y, z=[0] * len(x), mode='lines',
-                                line=dict(color='lightgray', width=2), name='Área Total'
-                            ))
+                        # 🍕 Gráfico de pizza
+                        fig_pizza = go.Figure(data=[go.Pie(
+                            labels=['Área construída', 'Área restante para ocupação', 'Área livre'],
+                            values=[area_construida, area_disponivel, area_total - area_ocupada],
+                            marker=dict(colors=['gray', 'green', 'lightgray']),
+                            hole=0.4
+                        )])
 
-                            fig2.add_trace(go.Scatter3d(
-                                x=x_scaled, y=y_scaled, z=[altura] * len(x_scaled), mode='lines',
-                                line=dict(color='green', width=4), name=f'Ocupação Simulada ({ocupacao_pct}%)'
-                            ))
+                        fig_pizza.update_layout(
+                            title="Distribuição da Ocupação no Lote",
+                            margin=dict(l=0, r=0, t=30, b=0),
+                            height=400
+                        )
 
-                            for i in range(len(x_scaled)):
-                                fig2.add_trace(go.Scatter3d(
-                                    x=[x_scaled[i], x_scaled[i]],
-                                    y=[y_scaled[i], y_scaled[i]],
-                                    z=[0, altura],
-                                    mode='lines', line=dict(color='green', width=2), showlegend=False
-                                ))
+                        st.plotly_chart(fig_pizza, use_container_width=True)
 
-                            if area_construida > 0:
-                                fig2.add_trace(go.Scatter3d(
-                                    x=x_scaled, y=y_scaled, z=[3] * len(x_scaled), mode='lines',
-                                    line=dict(color='gray', width=4), name='Área já construída'
-                                ))
-
-                            fig2.update_layout(
-                                scene=dict(
-                                    xaxis_title="Distância (m)",
-                                    yaxis_title="Distância (m)",
-                                    zaxis_title="Altura (m)"
-                                ),
-                                margin=dict(l=0, r=0, t=30, b=0)
-                            )
-
-                            st.plotly_chart(fig2, use_container_width=True)
-
-                            # 🍕 Gráfico de pizza
-                            fig_pizza = go.Figure(data=[go.Pie(
-                                labels=['Área construída', 'Área restante para ocupação', 'Área livre'],
-                                values=[area_construida, area_disponivel, area_total - area_ocupada],
-                                marker=dict(colors=['gray', 'green', 'lightgray']),
-                                hole=0.4
-                            )])
-
-                            fig_pizza.update_layout(
-                                title="Distribuição da Ocupação no Lote",
-                                margin=dict(l=0, r=0, t=30, b=0),
-                                height=400
-                            )
-
-                            st.plotly_chart(fig_pizza, use_container_width=True)
-
-                            st.markdown(f"🏗️ **Área construída declarada:** {area_construida:.2f} m²")
-                            st.markdown(f"📌 **Área restante para ocupação:** {area_disponivel:.2f} m²")
-                        else:
-                            st.warning("⚠️ Zona identificada no mapa, mas não encontrada na tabela de índices.")
+                        st.markdown(f"🏗️ **Área construída declarada:** {area_construida:.2f} m²")
+                        st.markdown(f"📌 **Área restante para ocupação:** {area_disponivel:.2f} m²")
                     else:
-                        st.warning("⚠️ Zona do lote não foi identificada.")
-                except Exception as e:
-                    st.error(f"Erro ao gerar visualização: {e}")
+                        st.warning("⚠️ Zona identificada no mapa, mas não encontrada na tabela de índices.")
+                else:
+                    st.warning("⚠️ Zona do lote não foi identificada.")
+            except Exception as e:
+                st.error(f"Erro ao gerar visualização: {e}")
             else:
                 st.error("⚠️ Geometria não é um polígono válido.")
     else:
