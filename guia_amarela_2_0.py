@@ -463,7 +463,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
     url_zoneamento_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
     url_usos_descricao = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
-    df_usos_descricoes = pd.read_csv(url_usos_descricao)
+    df_usos_descricoes = pd.read_csv(url_usos_descricao, encoding="utf-8")
     df_usos_descricoes.columns = df_usos_descricoes.columns.str.upper().str.strip()
     
     st.write("🧪 Colunas disponíveis no CSV de usos:", df_usos_descricoes.columns.tolist())
