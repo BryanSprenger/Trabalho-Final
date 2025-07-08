@@ -456,85 +456,171 @@ elif pagina == "📐 Área de Ocupação":
    
 # --------------------------------------------------------------------- INDICADORES -------------------------------------------------------------
 
-# Estilo CSS básico para o tooltip
-tooltip_style = """
-<style>
-.tooltip {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-  color: #4f8bf9;
-  font-weight: 500;
-}
+elif pagina == "📊 Indicadores Urbanísticos":
+    st.title("📊 Indicadores Urbanísticos do Lote")
+    st.markdown("Insira a Indicação Fiscal para consultar os índices urbanísticos aplicáveis ao lote, como coeficiente de aproveitamento, usos permitidos e permissíveis.")
 
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 300px;
-  background-color: #333;
-  color: #fff;
-  text-align: left;
-  border-radius: 6px;
-  padding: 8px;
-  position: absolute;
-  z-index: 1;
-  bottom: 125%; /* acima do texto */
-  left: 50%;
-  margin-left: -150px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 0.85rem;
-}
+    # URLs dos dados
+    url_zoneamento_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
+    url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
+    url_usos_descricoes = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
 
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
-}
-</style>
-"""
+    try:
+        # Carrega os dados
+        df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
+        gdf_zonas = gpd.read_file(url_zoneamento_geojson)
+        gdf_lotes = gpd.read_file(url_lotes)
+        df_usos_descricoes = pd.read_csv(url_usos_descricoes, encoding='utf-8')
 
-st.markdown(tooltip_style, unsafe_allow_html=True)
+        # Corrige colunas e geometrias
+        df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
+        gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
+        gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")
+        gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+        df_usos_descricoes.columns = df_usos_descricoes.columns.str.upper().str.strip()
 
-# Exibição dos Usos Permitidos com tooltip
-if "Usos Permitidos" in zona_info.columns:
-    usos_permitidos_raw = zona_info["Usos Permitidos"].values[0]
-    if isinstance(usos_permitidos_raw, str) and usos_permitidos_raw.strip():
-        usos_permitidos = [uso.strip() for uso in usos_permitidos_raw.split(";") if uso.strip()]
-        st.markdown("#### ✅ Usos Permitidos")
-        for uso in usos_permitidos:
-            descricao_row = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
-            if not descricao_row.empty:
-                descricao = descricao_row["DESCRICAO"].values[0]
-                tooltip_html = f'''
-                <div class="tooltip">• {uso}
-                  <span class="tooltiptext">{descricao}</span>
-                </div>
-                '''
+        # Entrada do usuário
+        indfiscal_zona = st.session_state.get("indfiscal_global", "").strip().upper()
+
+        if indfiscal_zona:
+            lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == indfiscal_zona]
+
+            if lote_selecionado.empty:
+                st.warning("⚠️ Nenhum lote encontrado com essa indicação fiscal.")
             else:
-                tooltip_html = f"<div>• {uso}</div>"
-            st.markdown(tooltip_html, unsafe_allow_html=True)
-    else:
-        st.info("ℹ️ Nenhum uso permitido especificado.")
+                geom_lote = lote_selecionado.geometry.values[0]
 
-# Exibição dos Usos Permissíveis com tooltip
-if "Usos Permissíveis" in zona_info.columns:
-    usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
-    if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
-        usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
-        st.markdown("#### ⚠️ Usos Permissíveis")
-        for uso in usos_permissiveis:
-            descricao_row = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
-            if not descricao_row.empty:
-                descricao = descricao_row["DESCRICAO"].values[0]
-                tooltip_html = f'''
-                <div class="tooltip">• {uso}
-                  <span class="tooltiptext">{descricao}</span>
-                </div>
-                '''
-            else:
-                tooltip_html = f"<div>• {uso}</div>"
-            st.markdown(tooltip_html, unsafe_allow_html=True)
-    else:
-        st.info("ℹ️ Nenhum uso permissível especificado.")
+                if geom_lote.geom_type == "MultiPolygon":
+                    geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
+
+                zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
+
+                if not zona_intersectada.empty:
+                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA']
+                    zona_lote = str(zona_lote).strip().upper()
+                    st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
+
+                    zona_info = df_indicadores[df_indicadores['ZONA'].str.upper().str.strip() == zona_lote]
+
+                    if not zona_info.empty:
+                        st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
+
+                        colunas_renomeadas = {
+                            "ZONA": "Zona",
+                            "CA_BASICO": "CA Básico",
+                            "CA_MAXIMO": "CA Máximo",
+                            "TAXA_OCUPACAO_MAX": "Taxa de Ocupação (%)",
+                            "TAXA_PERMEABILIDADE_MIN": "Taxa de Permeabilidade (%)",
+                            "USOS_PERMITIDOS": "Usos Permitidos",
+                            "USOS_PERMISSIVEIS": "Usos Permissíveis"
+                        }
+
+                        zona_info = zona_info.rename(columns=colunas_renomeadas)
+
+                        for col in ["CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]:
+                            if col in zona_info.columns:
+                                zona_info[col] = pd.to_numeric(zona_info[col], errors='coerce').round(1)
+
+                        colunas_tabela = ["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]
+                        st.dataframe(zona_info[colunas_tabela], use_container_width=True)
+
+                        # Cálculos com base na área do lote
+                        area_lote = geom_lote.area
+                        st.markdown("### 📐 Cálculo Aplicado ao Lote")
+                        ca_basico = zona_info["CA Básico"].values[0]
+                        ca_maximo = zona_info["CA Máximo"].values[0]
+                        taxa_ocupacao = zona_info["Taxa de Ocupação (%)"].values[0]
+                        taxa_permeavel = zona_info["Taxa de Permeabilidade (%)"].values[0]
+
+                        st.markdown(f"- **Área do Lote:** `{area_lote:.2f} m²`")
+                        st.markdown(f"- **CA Básico (m²):** `{(ca_basico * area_lote):.2f} m²`")
+                        st.markdown(f"- **CA Máximo (m²):** `{(ca_maximo * area_lote):.2f} m²`")
+                        st.markdown(f"- **Área Ocupável Máxima:** `{(taxa_ocupacao / 100 * area_lote):.2f} m²`")
+                        st.markdown(f"- **Área Permeável Mínima:** `{(taxa_permeavel / 100 * area_lote):.2f} m²`")
+
+                        # CSS para tooltip
+                        tooltip_style = """
+                        <style>
+                        .tooltip {
+                          position: relative;
+                          display: inline-block;
+                          cursor: pointer;
+                          color: #4f8bf9;
+                          font-weight: 500;
+                          margin-bottom: 8px;
+                        }
+                        .tooltip .tooltiptext {
+                          visibility: hidden;
+                          width: 320px;
+                          background-color: #333;
+                          color: #fff;
+                          text-align: left;
+                          border-radius: 6px;
+                          padding: 8px;
+                          position: absolute;
+                          z-index: 1;
+                          bottom: 125%;
+                          left: 50%;
+                          margin-left: -160px;
+                          opacity: 0;
+                          transition: opacity 0.3s;
+                          font-size: 0.85rem;
+                        }
+                        .tooltip:hover .tooltiptext {
+                          visibility: visible;
+                          opacity: 1;
+                        }
+                        </style>
+                        """
+                        st.markdown(tooltip_style, unsafe_allow_html=True)
+
+                        # Usos Permitidos
+                        if "Usos Permitidos" in zona_info.columns:
+                            usos_permitidos_raw = zona_info["Usos Permitidos"].values[0]
+                            if isinstance(usos_permitidos_raw, str) and usos_permitidos_raw.strip():
+                                usos_permitidos = [uso.strip() for uso in usos_permitidos_raw.split(";") if uso.strip()]
+                                st.markdown("#### ✅ Usos Permitidos")
+                                for uso in usos_permitidos:
+                                    descricao_row = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
+                                    if not descricao_row.empty:
+                                        descricao = descricao_row["DESCRIÇÃO"].values[0]
+                                        tooltip_html = f'''
+                                        <div class="tooltip">• {uso}
+                                          <span class="tooltiptext">{descricao}</span>
+                                        </div>
+                                        '''
+                                    else:
+                                        tooltip_html = f"<div>• {uso}</div>"
+                                    st.markdown(tooltip_html, unsafe_allow_html=True)
+                            else:
+                                st.info("ℹ️ Nenhum uso permitido especificado.")
+
+                        # Usos Permissíveis
+                        if "Usos Permissíveis" in zona_info.columns:
+                            usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
+                            if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
+                                usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
+                                st.markdown("#### ⚠️ Usos Permissíveis")
+                                for uso in usos_permissiveis:
+                                    descricao_row = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
+                                    if not descricao_row.empty:
+                                        descricao = descricao_row["DESCRIÇÃO"].values[0]
+                                        tooltip_html = f'''
+                                        <div class="tooltip">• {uso}
+                                          <span class="tooltiptext">{descricao}</span>
+                                        </div>
+                                        '''
+                                    else:
+                                        tooltip_html = f"<div>• {uso}</div>"
+                                    st.markdown(tooltip_html, unsafe_allow_html=True)
+                            else:
+                                st.info("ℹ️ Nenhum uso permissível especificado.")
+                    else:
+                        st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
+                else:
+                    st.warning("⚠️ O lote não intercepta nenhuma zona urbanística.")
+    except Exception as e:
+        st.error(f"Erro ao carregar dados de zoneamento: {e}")
 
 
 # ---------------------------------------------------------------- MAPA INTERATIVO ----------------------------------------------------------------------------
