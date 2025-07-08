@@ -460,52 +460,43 @@ elif pagina == "📊 Indicadores Urbanísticos":
     st.title("📊 Indicadores Urbanísticos do Lote")
     st.markdown("Insira a Indicação Fiscal para consultar os índices urbanísticos aplicáveis ao lote, como coeficiente de aproveitamento, usos permitidos e permissíveis.")
 
-    # URLs dos dados
     url_zoneamento_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
-    url_usos_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
+    url_usos_descricao = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
 
     try:
-        # Carrega os dados principais
         df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
+        df_usos_descricoes = pd.read_csv(url_usos_descricao)
 
-        # Corrige colunas e geometrias
+        # Limpeza dos dados
         df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
         gdf_zonas.columns = gdf_zonas.columns.str.upper().str.strip()
         gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
+        df_usos_descricoes["USO_PRINCIPAL"] = df_usos_descricoes["USO_PRINCIPAL"].astype(str).str.upper().str.strip()
+        df_usos_descricoes["DESCRICAO"] = df_usos_descricoes["DESCRICAO"].astype(str).str.strip()
 
-        # Carrega o CSV de descrições dos usos
-        df_usos_descricoes = pd.read_csv(url_usos_csv)
-        df_usos_descricoes.columns = df_usos_descricoes.columns.str.upper().str.strip()
-
-        # Entrada do usuário
         indfiscal_zona = st.session_state.get("indfiscal_global", "").strip().upper()
 
         if indfiscal_zona:
             lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == indfiscal_zona]
-
             if lote_selecionado.empty:
                 st.warning("⚠️ Nenhum lote encontrado com essa indicação fiscal.")
             else:
                 geom_lote = lote_selecionado.geometry.values[0]
-
                 if geom_lote.geom_type == "MultiPolygon":
                     geom_lote = max(geom_lote.geoms, key=lambda a: a.area)
 
                 zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
-
                 if not zona_intersectada.empty:
                     zona_lote = zona_intersectada.iloc[0]['NM_ZONA'].strip().upper()
                     st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
 
                     zona_info = df_indicadores[df_indicadores['ZONA'].str.upper().str.strip() == zona_lote]
-
                     if not zona_info.empty:
                         st.markdown("### 📋 Tabela de Indicadores Urbanísticos")
-
                         colunas_renomeadas = {
                             "ZONA": "Zona",
                             "CA_BASICO": "CA Básico",
@@ -515,17 +506,13 @@ elif pagina == "📊 Indicadores Urbanísticos":
                             "USOS_PERMITIDOS": "Usos Permitidos",
                             "USOS_PERMISSIVEIS": "Usos Permissíveis"
                         }
-
                         zona_info = zona_info.rename(columns=colunas_renomeadas)
-
                         for col in ["CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]:
                             if col in zona_info.columns:
                                 zona_info[col] = pd.to_numeric(zona_info[col], errors='coerce').round(1)
+                        st.dataframe(zona_info[["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]], use_container_width=True)
 
-                        colunas_tabela = ["Zona", "CA Básico", "CA Máximo", "Taxa de Ocupação (%)", "Taxa de Permeabilidade (%)"]
-                        st.dataframe(zona_info[colunas_tabela], use_container_width=True)
-
-                        # Cálculos com base na área do lote
+                        # Cálculo
                         area_lote = geom_lote.area
                         ca_basico = zona_info["CA Básico"].values[0]
                         ca_maximo = zona_info["CA Máximo"].values[0]
@@ -539,47 +526,29 @@ elif pagina == "📊 Indicadores Urbanísticos":
                         st.markdown(f"- **Área Ocupável Máxima:** `{(taxa_ocupacao / 100 * area_lote):.2f} m²`")
                         st.markdown(f"- **Área Permeável Mínima:** `{(taxa_permeavel / 100 * area_lote):.2f} m²`")
 
-                        # Usos Permitidos
-                        if "Usos Permitidos" in zona_info.columns:
-                            usos_permitidos_raw = zona_info["Usos Permitidos"].values[0]
-                            if isinstance(usos_permitidos_raw, str) and usos_permitidos_raw.strip():
-                                usos_permitidos = [uso.strip() for uso in usos_permitidos_raw.split(";") if uso.strip()]
-                                st.markdown("#### ✅ Usos Permitidos")
-                                for uso in usos_permitidos:
-                                    descricao = df_usos_descricoes[df_usos_descricoes["USO"] == uso]["DESCRICAO"].values
-                                    if len(descricao) > 0 and pd.notnull(descricao[0]):
-                                        st.markdown(f"""
-                                            <div style="position: relative; display: inline-block;">
-                                                <span style="border-bottom: 1px dotted #000;" title="{descricao[0]}">{uso}</span>
-                                            </div><br>
-                                        """, unsafe_allow_html=True)
+                        def exibir_usos(usos_raw, titulo):
+                            if isinstance(usos_raw, str) and usos_raw.strip():
+                                usos = [uso.strip().upper() for uso in usos_raw.split(";") if uso.strip()]
+                                st.markdown(f"#### {titulo}")
+                                for uso in usos:
+                                    desc_match = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
+                                    if not desc_match.empty:
+                                        descricao = desc_match["DESCRICAO"].values[0]
+                                        st.markdown(
+                                            f"""<div style="display:inline-block;">
+                                                <span style="border-bottom:1px dotted gray;" title="{descricao}">{uso.title()}</span>
+                                            </div><br>""", unsafe_allow_html=True
+                                        )
                                     else:
-                                        st.markdown(f"- {uso}")
-                                if len(usos_permitidos) > 8:
-                                    st.markdown("📎 Para detalhes completos, veja a [Lei 15.511](https://mid.curitiba.pr.gov.br/2019/00319519.pdf#page=75)")
+                                        st.markdown(f"- {uso.title()}")
                             else:
-                                st.info("ℹ️ Nenhum uso permitido especificado.")
+                                st.info(f"ℹ️ Nenhum uso especificado para {titulo}.")
 
-                        # Usos Permissíveis
+                        if "Usos Permitidos" in zona_info.columns:
+                            exibir_usos(zona_info["Usos Permitidos"].values[0], "✅ Usos Permitidos")
+
                         if "Usos Permissíveis" in zona_info.columns:
-                            usos_permissiveis_raw = zona_info["Usos Permissíveis"].values[0]
-                            if isinstance(usos_permissiveis_raw, str) and usos_permissiveis_raw.strip():
-                                usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
-                                st.markdown("#### ⚠️ Usos Permissíveis")
-                                for uso in usos_permissiveis:
-                                    descricao = df_usos_descricoes[df_usos_descricoes["USO"] == uso]["DESCRICAO"].values
-                                    if len(descricao) > 0 and pd.notnull(descricao[0]):
-                                        st.markdown(f"""
-                                            <div style="position: relative; display: inline-block;">
-                                                <span style="border-bottom: 1px dotted #000;" title="{descricao[0]}">{uso}</span>
-                                            </div><br>
-                                        """, unsafe_allow_html=True)
-                                    else:
-                                        st.markdown(f"- {uso}")
-                                if len(usos_permissiveis) > 8:
-                                    st.markdown("📎 Veja a lista completa de permissíveis na [Lei 15.511](https://mid.curitiba.pr.gov.br/2019/00319519.pdf#page=75)")
-                            else:
-                                st.info("ℹ️ Nenhum uso permissível especificado.")
+                            exibir_usos(zona_info["Usos Permissíveis"].values[0], "⚠️ Usos Permissíveis")
                     else:
                         st.warning("⚠️ Zona identificada no mapa, mas não localizada na tabela de indicadores.")
                 else:
