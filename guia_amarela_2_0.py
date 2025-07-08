@@ -541,7 +541,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                         descricao = desc_match["DESCRICAO"].values[0]
                                         st.markdown(
                                             f"""<div style="display:inline-block;">
-                                                <span style="border-bottom:1px dotted gray;" title="{descrição}">{uso.title()}</span>
+                                                <span style="border-bottom:1px dotted gray;" title="{descricao}">{uso.title()}</span>
                                             </div><br>""", unsafe_allow_html=True
                                         )
                                     else:
