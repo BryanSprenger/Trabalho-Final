@@ -268,7 +268,6 @@ elif pagina == "📐 Área de Ocupação":
 
     ind_fiscal_2 = st.session_state.get("indfiscal_global", "").strip().upper()
 
-    # 🔍 Verifica existência de alvarás e padroniza Indicação Fiscal
     if 'df_alvaras_total' in globals() and not df_alvaras_total.empty:
         df_alvaras_total['INDFISCAL'] = (
             df_alvaras_total['INDFISCAL']
@@ -277,17 +276,15 @@ elif pagina == "📐 Área de Ocupação":
             .str.zfill(8)
         )
         ind_fiscal_2 = ind_fiscal_2.strip().zfill(8)
-        
         alvaras_encontrados = df_alvaras_total[df_alvaras_total['INDFISCAL'] == ind_fiscal_2]
-        
+
         if not alvaras_encontrados.empty:
             st.success(f"✅ {len(alvaras_encontrados)} alvará(s) encontrado(s) para a IF {ind_fiscal_2}.")
         else:
             st.info(f"ℹ️ Nenhum alvará encontrado para a IF {ind_fiscal_2}.")
     else:
         alvaras_encontrados = pd.DataFrame()
-    
-    # 🎯 Seleciona lote correspondente
+
     if ind_fiscal_2:
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
         lote_2 = gdf_lotes[gdf_lotes["INDFISCAL"] == ind_fiscal_2]
@@ -330,17 +327,6 @@ elif pagina == "📐 Área de Ocupação":
                             taxa_maxima = float(zona_match["TAXA_OCUPACAO_MAX"].values[0])
                             st.info(f"🏙️ Zona: **{zona_nome}** — Taxa Máxima de Ocupação: **{taxa_maxima:.1f}%**")
 
-                            ocupacao_pct = st.slider("Taxa de Ocupação (%)", 0, int(taxa_maxima), int(taxa_maxima // 2), 5)
-                            area_ocupada = area_total * (ocupacao_pct / 100)
-                            altura = 3
-
-                            escala = (area_ocupada / area_total) ** 0.5
-                            x_centro = sum(x) / len(x)
-                            y_centro = sum(y) / len(y)
-                            x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
-                            y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
-
-                            # Área construída real (via alvará)
                             alvaras_encontrados['Metragem Construída Lote'] = (
                                 alvaras_encontrados['Metragem Construída Lote']
                                 .astype(str)
@@ -351,42 +337,38 @@ elif pagina == "📐 Área de Ocupação":
                             alvaras_encontrados['Metragem Construída Lote'] = pd.to_numeric(
                                 alvaras_encontrados['Metragem Construída Lote'], errors='coerce'
                             )
-                            
-                            # Limpeza da quantidade de pavimentos
+
                             if 'Quantidade Pavimentos' in alvaras_encontrados.columns:
                                 alvaras_encontrados['Quantidade Pavimentos'] = pd.to_numeric(
                                     alvaras_encontrados['Quantidade Pavimentos'], errors='coerce'
                                 )
                                 alvaras_encontrados['Quantidade Pavimentos'] = alvaras_encontrados['Quantidade Pavimentos'].fillna(1)
-                                
-                                # Divide a área construída pelo número de pavimentos
                                 alvaras_encontrados['Area_Ocupada_Calculada'] = (
                                     alvaras_encontrados['Metragem Construída Lote'] /
                                     alvaras_encontrados['Quantidade Pavimentos']
                                 )
                                 area_construida = alvaras_encontrados['Area_Ocupada_Calculada'].sum()
-                                
-                                st.markdown(
-                                    f"🏗️ **Área construída total:** {alvaras_encontrados['Metragem Construída Lote'].sum():.2f} m² "
-                                    f"dividida por {int(alvaras_encontrados['Quantidade Pavimentos'].max())} pavimento(s) "
-                                    f"→ **Área ocupada projetada:** {area_construida:.2f} m²"
-                                )
                             else:
                                 area_construida = alvaras_encontrados['Metragem Construída Lote'].sum()
-                                st.warning("⚠️ Coluna 'Quantidade Pavimentos' não encontrada nos alvarás.")
-                                st.markdown(f"🏗️ **Área construída registrada:** {area_construida:.2f} m²")
-                            
-                            # 📉 Verificação contra ocupação máxima permitida
-                            if area_construida > area_ocupada:
-                                st.warning(
-                                    f"⚠️ A área construída declarada ({area_construida:.2f} m²) ultrapassa a ocupação permitida ({area_ocupada:.2f} m²)."
-                                )
-                                area_construida = area_ocupada
-                            
-                            # 🧮 Cálculo final da área ainda disponível
-                            area_disponivel = max(area_ocupada - area_construida, 0)
 
-                            # 🧱 Gráfico 3D
+                            ocupacao_min = (area_construida / area_total) * 100 if area_construida > 0 else 0
+                            ocupacao_max = float(taxa_maxima)
+                            ocupacao_pct = st.slider(
+                                "Taxa de Ocupação (%)",
+                                min_value=int(ocupacao_min),
+                                max_value=int(ocupacao_max),
+                                value=int((ocupacao_min + ocupacao_max) // 2),
+                                step=1
+                            )
+
+                            area_ocupada = area_total * (ocupacao_pct / 100)
+                            altura_base = 3
+                            escala = (area_ocupada / area_total) ** 0.5
+                            x_centro = sum(x) / len(x)
+                            y_centro = sum(y) / len(y)
+                            x_scaled = [(xi - x_centro) * escala + x_centro for xi in x]
+                            y_scaled = [(yi - y_centro) * escala + y_centro for yi in y]
+
                             fig2 = go.Figure()
 
                             fig2.add_trace(go.Scatter3d(
@@ -395,7 +377,7 @@ elif pagina == "📐 Área de Ocupação":
                             ))
 
                             fig2.add_trace(go.Scatter3d(
-                                x=x_scaled, y=y_scaled, z=[altura] * len(x_scaled), mode='lines',
+                                x=x_scaled, y=y_scaled, z=[altura_base] * len(x_scaled), mode='lines',
                                 line=dict(color='green', width=4), name=f'Ocupação Simulada ({ocupacao_pct}%)'
                             ))
 
@@ -403,15 +385,23 @@ elif pagina == "📐 Área de Ocupação":
                                 fig2.add_trace(go.Scatter3d(
                                     x=[x_scaled[i], x_scaled[i]],
                                     y=[y_scaled[i], y_scaled[i]],
-                                    z=[0, altura],
+                                    z=[0, altura_base],
                                     mode='lines', line=dict(color='green', width=2), showlegend=False
                                 ))
 
                             if area_construida > 0:
                                 fig2.add_trace(go.Scatter3d(
-                                    x=x_scaled, y=y_scaled, z=[3] * len(x_scaled), mode='lines',
-                                    line=dict(color='gray', width=4), name='Área já construída'
+                                    x=x_scaled, y=y_scaled, z=[altura_base] * len(x_scaled),
+                                    mode='lines', line=dict(color='darkgoldenrod', width=4), name='Área Construída (Alvarás)'
                                 ))
+
+                                for i in range(len(x_scaled)):
+                                    fig2.add_trace(go.Scatter3d(
+                                        x=[x_scaled[i], x_scaled[i]],
+                                        y=[y_scaled[i], y_scaled[i]],
+                                        z=[0, altura_base],
+                                        mode='lines', line=dict(color='darkgoldenrod', width=2), showlegend=False
+                                    ))
 
                             fig2.update_layout(
                                 scene=dict(
@@ -424,11 +414,12 @@ elif pagina == "📐 Área de Ocupação":
 
                             st.plotly_chart(fig2, use_container_width=True)
 
-                            # 🍕 Gráfico de pizza
+                            area_disponivel = max(area_ocupada - area_construida, 0)
+
                             fig_pizza = go.Figure(data=[go.Pie(
                                 labels=['Área construída', 'Área restante para ocupação', 'Área livre'],
                                 values=[area_construida, area_disponivel, area_total - area_ocupada],
-                                marker=dict(colors=['gray', 'green', 'lightgray']),
+                                marker=dict(colors=['darkgoldenrod', 'green', 'lightgray']),
                                 hole=0.4
                             )])
 
