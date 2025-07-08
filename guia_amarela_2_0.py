@@ -537,10 +537,10 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                 for uso in usos:
                                     desc_match = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
                                     if not desc_match.empty:
-                                        descricao = desc_match["DESCRICAO"].values[0]
+                                        descricao = desc_match["DESCRIÇÃO"].values[0]
                                         st.markdown(
                                             f"""<div style="display:inline-block;">
-                                                <span style="border-bottom:1px dotted gray;" title="{descricao}">{uso.title()}</span>
+                                                <span style="border-bottom:1px dotted gray;" title="{descrição}">{uso.title()}</span>
                                             </div><br>""", unsafe_allow_html=True
                                         )
                                     else:
