@@ -463,9 +463,10 @@ elif pagina == "📊 Indicadores Urbanísticos":
     # URLs dos dados
     url_zoneamento_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO_USOS_COEFICIENTES.csv"
     url_zoneamento_geojson = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/ZONEAMENTO.geojson"
+    url_usos_csv = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
 
     try:
-        # Carrega os dados
+        # Carrega os dados principais
         df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
@@ -476,11 +477,14 @@ elif pagina == "📊 Indicadores Urbanísticos":
         gdf_zonas = gdf_zonas.set_geometry("GEOMETRY")
         gdf_lotes['INDFISCAL'] = gdf_lotes['INDFISCAL'].astype(str)
 
+        # Carrega o CSV de descrições dos usos
+        df_usos_descricoes = pd.read_csv(url_usos_csv)
+        df_usos_descricoes.columns = df_usos_descricoes.columns.str.upper().str.strip()
+
         # Entrada do usuário
         indfiscal_zona = st.session_state.get("indfiscal_global", "").strip().upper()
 
         if indfiscal_zona:
-            indfiscal_zona = str(indfiscal_zona).strip()
             lote_selecionado = gdf_lotes[gdf_lotes["INDFISCAL"] == indfiscal_zona]
 
             if lote_selecionado.empty:
@@ -494,8 +498,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                 zona_intersectada = gdf_zonas[gdf_zonas.geometry.intersects(geom_lote)]
 
                 if not zona_intersectada.empty:
-                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA']
-                    zona_lote = str(zona_lote).strip().upper()
+                    zona_lote = zona_intersectada.iloc[0]['NM_ZONA'].strip().upper()
                     st.success(f"📌 Zona identificada no mapa: `{zona_lote}`")
 
                     zona_info = df_indicadores[df_indicadores['ZONA'].str.upper().str.strip() == zona_lote]
@@ -524,12 +527,12 @@ elif pagina == "📊 Indicadores Urbanísticos":
 
                         # Cálculos com base na área do lote
                         area_lote = geom_lote.area
-                        st.markdown("### 📐 Cálculo Aplicado ao Lote")
                         ca_basico = zona_info["CA Básico"].values[0]
                         ca_maximo = zona_info["CA Máximo"].values[0]
                         taxa_ocupacao = zona_info["Taxa de Ocupação (%)"].values[0]
                         taxa_permeavel = zona_info["Taxa de Permeabilidade (%)"].values[0]
 
+                        st.markdown("### 📐 Cálculo Aplicado ao Lote")
                         st.markdown(f"- **Área do Lote:** `{area_lote:.2f} m²`")
                         st.markdown(f"- **CA Básico (m²):** `{(ca_basico * area_lote):.2f} m²`")
                         st.markdown(f"- **CA Máximo (m²):** `{(ca_maximo * area_lote):.2f} m²`")
@@ -543,7 +546,17 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                 usos_permitidos = [uso.strip() for uso in usos_permitidos_raw.split(";") if uso.strip()]
                                 st.markdown("#### ✅ Usos Permitidos")
                                 for uso in usos_permitidos:
-                                    st.markdown(f"- {uso}")
+                                    descricao = df_usos_descricoes[df_usos_descricoes["USO"] == uso]["DESCRICAO"].values
+                                    if len(descricao) > 0 and pd.notnull(descricao[0]):
+                                        st.markdown(f"""
+                                            <div style="position: relative; display: inline-block;">
+                                                <span style="border-bottom: 1px dotted #000;" title="{descricao[0]}">{uso}</span>
+                                            </div><br>
+                                        """, unsafe_allow_html=True)
+                                    else:
+                                        st.markdown(f"- {uso}")
+                                if len(usos_permitidos) > 8:
+                                    st.markdown("📎 Para detalhes completos, veja a [Lei 15.511](https://mid.curitiba.pr.gov.br/2019/00319519.pdf#page=75)")
                             else:
                                 st.info("ℹ️ Nenhum uso permitido especificado.")
 
@@ -554,7 +567,17 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                 usos_permissiveis = [uso.strip() for uso in usos_permissiveis_raw.split(";") if uso.strip()]
                                 st.markdown("#### ⚠️ Usos Permissíveis")
                                 for uso in usos_permissiveis:
-                                    st.markdown(f"- {uso}")
+                                    descricao = df_usos_descricoes[df_usos_descricoes["USO"] == uso]["DESCRICAO"].values
+                                    if len(descricao) > 0 and pd.notnull(descricao[0]):
+                                        st.markdown(f"""
+                                            <div style="position: relative; display: inline-block;">
+                                                <span style="border-bottom: 1px dotted #000;" title="{descricao[0]}">{uso}</span>
+                                            </div><br>
+                                        """, unsafe_allow_html=True)
+                                    else:
+                                        st.markdown(f"- {uso}")
+                                if len(usos_permissiveis) > 8:
+                                    st.markdown("📎 Veja a lista completa de permissíveis na [Lei 15.511](https://mid.curitiba.pr.gov.br/2019/00319519.pdf#page=75)")
                             else:
                                 st.info("ℹ️ Nenhum uso permissível especificado.")
                     else:
