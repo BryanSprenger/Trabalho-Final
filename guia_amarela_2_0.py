@@ -549,29 +549,32 @@ elif pagina == "📊 Indicadores Urbanísticos":
                           font-weight: 500;
                           margin-bottom: 8px;
                         }
+                        
                         .tooltip .tooltiptext {
                           visibility: hidden;
-                          width: 320px;
+                          width: 400px;  /* Caixa mais larga */
                           background-color: #333;
                           color: #fff;
                           text-align: left;
                           border-radius: 6px;
-                          padding: 8px;
+                          padding: 10px;
                           position: absolute;
                           z-index: 1;
-                          bottom: 125%;
-                          left: 50%;
-                          margin-left: -160px;
+                          top: 0;
+                          left: 105%;  /* Posição à direita do elemento */
                           opacity: 0;
                           transition: opacity 0.3s;
                           font-size: 0.85rem;
+                          box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
                         }
+                        
                         .tooltip:hover .tooltiptext {
                           visibility: visible;
                           opacity: 1;
                         }
                         </style>
                         """
+
                         st.markdown(tooltip_style, unsafe_allow_html=True)
 
                         # Usos Permitidos
