@@ -473,7 +473,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
         df_indicadores = pd.read_csv(url_zoneamento_csv, sep=',')
         gdf_zonas = gpd.read_file(url_zoneamento_geojson)
         gdf_lotes = gpd.read_file(url_lotes)
-        df_usos_descricoes = pd.read_csv(url_usos_descricao)
+        df_usos_descricoes = pd.read_csv("https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv")
 
         # Limpeza dos dados
         df_indicadores.columns = df_indicadores.columns.str.upper().str.strip()
