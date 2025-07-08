@@ -465,6 +465,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
     url_usos_descricao = "https://raw.githubusercontent.com/BryanSprenger/Trabalho-Final/refs/heads/main/USOS_DO_SOLO.csv"
     df_usos_descricoes = pd.read_csv(url_usos_descricao, encoding="utf-8")
     df_usos_descricoes.columns = df_usos_descricoes.columns.str.upper().str.strip()
+    df_usos_descricoes.rename(columns={"DESCRIÇÃO": "DESCRICAO"}, inplace=True)
     
     st.write("🧪 Colunas disponíveis no CSV de usos:", df_usos_descricoes.columns.tolist())
 
@@ -537,7 +538,7 @@ elif pagina == "📊 Indicadores Urbanísticos":
                                 for uso in usos:
                                     desc_match = df_usos_descricoes[df_usos_descricoes["USO_PRINCIPAL"] == uso]
                                     if not desc_match.empty:
-                                        descricao = desc_match["DESCRIÇÃO"].values[0]
+                                        descricao = desc_match["DESCRICAO"].values[0]
                                         st.markdown(
                                             f"""<div style="display:inline-block;">
                                                 <span style="border-bottom:1px dotted gray;" title="{descrição}">{uso.title()}</span>
